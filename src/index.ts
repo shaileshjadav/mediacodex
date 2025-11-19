@@ -1,4 +1,4 @@
-import { SQSClient, ReceiveMessageCommand, Message } from "@aws-sdk/client-sqs";
+import { SQSClient, ReceiveMessageCommand, Message, CreateQueueCommand, GetQueueUrlCommand, SQSServiceException,  } from "@aws-sdk/client-sqs";
 import * as dotenv from "dotenv";
 import type {S3Event} from "aws-lambda";
 
@@ -12,10 +12,37 @@ const client = new SQSClient({
     }
 })
 
+async function ensureQueue(queueName:string){
+    // check is SQS Queue is exists if not exists then create a new SQS Queue
+
+    try{
+        const queueName = process.env.AWS_SQS_QUEUE_NAME;
+
+        const getQueueUrlCommand = new GetQueueUrlCommand({ QueueName: queueName });
+        const getQueueUrlResponse = await client.send(getQueueUrlCommand);
+        return getQueueUrlResponse.QueueUrl;
+    }
+    catch(error: unknown){
+        if (error instanceof SQSServiceException && error.name === "QueueDoesNotExist") {
+            console.log("Queue not found. Creating...");
+            const createQueueCommand = new CreateQueueCommand({ QueueName: queueName });
+            const createQueueResponse = await client.send(createQueueCommand);
+            return createQueueResponse.QueueUrl;
+        }
+        
+        // Other errors → throw
+        throw error;
+    }
+}
+
+
 async function init () {
-    
+ 
+    const queueName = process.env.AWS_SQS_QUEUE_NAME;
+    const queueUrl = await ensureQueue(queueName);
+
     const command = new ReceiveMessageCommand({
-        QueueUrl: process.env.AWS_SQS_URL,
+        QueueUrl: queueUrl,
         MaxNumberOfMessages: 1,
         WaitTimeSeconds:20,
 
