@@ -51,7 +51,6 @@ export async function init() {
           object: { key },
         } = s3;
         console.log(`New video uploaded: ${bucket.name}/${key}`);
-        console.log("process.env", process.env)
         
         const rawBucket = process.env.AWS_RAW_BUCKET;
         if (!rawBucket) throw new Error('AWS_RAW_BUCKET env var is required');

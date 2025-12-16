@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { XMarkIcon, CloudArrowUpIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import { getVideoUploadUrl, uploadOnObjectStore } from '../apis/video';
+import type { VideoUploadUrlRequest, VideoUploadUrlResponse } from '../types/video';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -52,27 +54,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
       return `Invalid file type. Please upload a video file (${ACCEPTED_VIDEO_TYPES.map(type => type.split('/')[1]).join(', ')}).`;
     }
-    
+
     if (file.size > MAX_FILE_SIZE) {
       return `File size too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`;
     }
-    
+
     return null;
   };
 
   const handleFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    
+
     if (uploadFiles.length + fileArray.length > MAX_FILES) {
       alert(`Maximum ${MAX_FILES} files allowed. Please remove some files first.`);
       return;
     }
 
     const newUploadFiles: UploadFile[] = [];
-    
+
     fileArray.forEach((file) => {
       const validationError = validateFile(file);
-      
+
       newUploadFiles.push({
         file,
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -101,7 +103,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFiles(files);
@@ -126,29 +128,29 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       let progress = 0;
       const interval = setInterval(() => {
         progress += Math.random() * 15;
-        
-        setUploadFiles(prev => prev.map(f => 
-          f.id === uploadFile.id 
+
+        setUploadFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
             ? { ...f, progress: Math.min(progress, 100), status: 'uploading' }
             : f
         ));
 
         if (progress >= 100) {
           clearInterval(interval);
-          
+
           // Simulate occasional upload failures for demonstration
           const shouldFail = Math.random() < 0.1; // 10% failure rate
-          
+
           if (shouldFail) {
-            setUploadFiles(prev => prev.map(f => 
-              f.id === uploadFile.id 
+            setUploadFiles(prev => prev.map(f =>
+              f.id === uploadFile.id
                 ? { ...f, status: 'error', error: 'Upload failed. Please try again.' }
                 : f
             ));
             reject(new Error('Upload failed'));
           } else {
-            setUploadFiles(prev => prev.map(f => 
-              f.id === uploadFile.id 
+            setUploadFiles(prev => prev.map(f =>
+              f.id === uploadFile.id
                 ? { ...f, progress: 100, status: 'completed' }
                 : f
             ));
@@ -159,9 +161,68 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     });
   };
 
+  const processFileUpload = async (uploadFile: UploadFile): Promise<void> => {
+    const videoUploadReqData: VideoUploadUrlRequest = {
+      contentType: 'video/mp4',
+      fileName: uploadFile.file.name,
+    };
+    const fileUploadResponse: VideoUploadUrlResponse = await getVideoUploadUrl(videoUploadReqData);
+    await uploadOnObjectStore(fileUploadResponse.uploadUrl, uploadFile.file, (progress) => {
+      setUploadFiles(prev => prev.map(f =>
+        f.id === uploadFile.id
+          ? { ...f, progress: Math.min(progress, 100), status: 'uploading' }
+          : f
+      ));
+
+      if (progress >= 100) {
+        setUploadFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
+            ? { ...f, progress: 100, status: 'completed' }
+            : f
+        ));
+      }
+    });
+
+    // return new Promise((resolve, reject) => {
+    //   let progress = 0;
+    //   const interval = setInterval(() => {
+    //     progress += Math.random() * 15;
+
+    //     setUploadFiles(prev => prev.map(f => 
+    //       f.id === uploadFile.id 
+    //         ? { ...f, progress: Math.min(progress, 100), status: 'uploading' }
+    //         : f
+    //     ));
+
+    //     if (progress >= 100) {
+    //       clearInterval(interval);
+
+    //       // Simulate occasional upload failures for demonstration
+    //       const shouldFail = Math.random() < 0.1; // 10% failure rate
+
+    //       if (shouldFail) {
+    //         setUploadFiles(prev => prev.map(f => 
+    //           f.id === uploadFile.id 
+    //             ? { ...f, status: 'error', error: 'Upload failed. Please try again.' }
+    //             : f
+    //         ));
+    //         reject(new Error('Upload failed'));
+    //       } else {
+    //         setUploadFiles(prev => prev.map(f => 
+    //           f.id === uploadFile.id 
+    //             ? { ...f, progress: 100, status: 'completed' }
+    //             : f
+    //         ));
+    //         resolve();
+    //       }
+    //     }
+    //   }, 200);
+    // });
+  };
+
   const startUpload = async () => {
     const validFiles = uploadFiles.filter(f => f.status === 'pending');
-    
+
     if (validFiles.length === 0) {
       return;
     }
@@ -172,7 +233,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       // Upload files sequentially to avoid overwhelming the server
       for (const uploadFile of validFiles) {
         try {
-          await simulateUpload(uploadFile);
+          // await simulateUpload(uploadFile);
+          await processFileUpload(uploadFile);
         } catch (error) {
           console.error(`Failed to upload ${uploadFile.file.name}:`, error);
         }
@@ -195,7 +257,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       const confirmClose = window.confirm('Upload in progress. Are you sure you want to close?');
       if (!confirmClose) return;
     }
-    
+
     setUploadFiles([]);
     setIsDragOver(false);
     setIsUploading(false);
@@ -234,7 +296,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
         {/* Background overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
           onClick={handleClose}
         />
@@ -271,20 +333,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <div className="bg-white px-8 py-8">
             {/* Drag and drop area */}
             <div
-              className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-                isDragOver
+              className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${isDragOver
                   ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 scale-105'
                   : 'border-gray-300 hover:border-blue-300 hover:bg-gray-50'
-              }`}
+                }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
               <div className={`transition-all duration-300 ${isDragOver ? 'scale-110' : ''}`}>
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center">
-                  <CloudArrowUpIcon className={`h-10 w-10 transition-colors duration-300 ${
-                    isDragOver ? 'text-blue-600' : 'text-gray-500'
-                  }`} />
+                  <CloudArrowUpIcon className={`h-10 w-10 transition-colors duration-300 ${isDragOver ? 'text-blue-600' : 'text-gray-500'
+                    }`} />
                 </div>
                 <div className="mb-6">
                   <p className="text-2xl font-bold text-gray-900 mb-2">
@@ -322,7 +382,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   </p>
                 </div>
               </div>
-              
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -434,8 +494,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               <button
                 onClick={startUpload}
                 disabled={
-                  isUploading || 
-                  uploadFiles.length === 0 || 
+                  isUploading ||
+                  uploadFiles.length === 0 ||
                   uploadFiles.every(f => f.status === 'error' || f.status === 'completed')
                 }
                 className="px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 border border-transparent rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"

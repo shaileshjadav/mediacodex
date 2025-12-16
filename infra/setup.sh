@@ -8,6 +8,9 @@ echo "Creating S3 buckets..."
 aws --endpoint-url=$ENDPOINT s3 mb s3://raw-videos
 aws --endpoint-url=$ENDPOINT s3 mb s3://processed-videos
 
+echo "Configuring CORS for raw-videos bucket..."
+aws --endpoint-url=$ENDPOINT s3api put-bucket-cors --bucket raw-videos --cors-configuration file://cors-config.json
+
 
 echo "Creating SQS queue..."
 aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name video-upload-events

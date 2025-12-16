@@ -14,7 +14,7 @@ export async function transcodeVideo(key:string, inputBucket:string, outputBucke
         `UPLOAD_BUCKET_NAME=${outputBucket}`,
         ],
       HostConfig: {
-        // AutoRemove: true,
+        AutoRemove: true,
         NetworkMode:'localstack-network', // Same network as docker-compose
       }
     });
