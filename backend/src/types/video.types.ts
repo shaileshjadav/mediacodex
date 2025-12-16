@@ -51,3 +51,34 @@ export interface TranscodingJobPayload {
     codec: "h264" | "h265";
   }>;
 }
+
+export interface Video {
+  id:string;
+  userId:string;
+  videoId:string;
+  status:string;
+  createdAt:string;
+  updatedAt:string;
+}
+
+/**
+ * Payload for insert new video into db
+ */
+export interface InsertVideoPayload {
+    userId: string;
+    videoId:string;
+    status: string;
+}
+
+/** When inserts new video into db  */
+export interface InsertedVideo {
+    id:number;
+}
+
+
+export interface VideoList {
+  videos: Video[];
+  // total: number;
+  // page: number;
+  // limit: number;
+}

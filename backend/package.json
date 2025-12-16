@@ -26,6 +26,5 @@
     "migrate:new": "dbmate new",
     "migrate:up": "dbmate up",
     "start": "npx ts-node ./src/index.ts"
-    // "dev": "npx tsc-watch --onSuccess ./src/index.ts"
   }
 }

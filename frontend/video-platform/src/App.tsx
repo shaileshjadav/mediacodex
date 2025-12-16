@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SignInButton } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
-import { LayoutWrapper, UploadModal, VideoList, StatusPage } from './components';
+import { LayoutWrapper, UploadModal, VideoList, StatusPage, VideoListContainer } from './components';
 import type { Video } from './types';
 import { useState } from 'react';
 
@@ -31,12 +31,9 @@ function LoadingDemoPage() {
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Loading State Demo</h1>
         <p className="text-gray-600">See how the interface looks while loading content</p>
       </div>
-      <VideoList
-        videos={[]}
-        loading={true}
+      <VideoListContainer 
         onVideoSelect={handleVideoSelect}
-        onEmbedClick={handleEmbedClick}
-      />
+        onEmbedClick={handleEmbedClick}/>
     </div>
   );
 }
@@ -56,12 +53,9 @@ function EmptyDemoPage() {
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Empty State Demo</h1>
         <p className="text-gray-600">See how the interface looks when no videos are present</p>
       </div>
-      <VideoList
-        videos={[]}
-        loading={false}
+      <VideoListContainer 
         onVideoSelect={handleVideoSelect}
-        onEmbedClick={handleEmbedClick}
-      />
+        onEmbedClick={handleEmbedClick}/>
     </div>
   );
 }
@@ -204,12 +198,9 @@ function DashboardPage() {
             onUploadComplete={handleUploadComplete}
           />
           
-      <VideoList
-        videos={mockVideos}
-        loading={false}
-        onVideoSelect={handleVideoSelect}
-        onEmbedClick={handleEmbedClick}
-      />
+        <VideoListContainer 
+          onVideoSelect={handleVideoSelect}
+          onEmbedClick={handleEmbedClick}/>
     </div>
   );
 }

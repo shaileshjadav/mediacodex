@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 
-import { init } from "./sqs-listener";
+import { init } from "./worker/sqs-listener";
 import {pool} from "./config/db";
 import router from "./api/routes";
 import errorHandlerMiddleware from "./api/middleware/errorHandler";

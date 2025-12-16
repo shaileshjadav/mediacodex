@@ -6,11 +6,18 @@ import {
 import type { S3Event } from "aws-lambda";
 
 import { transcodeVideo } from "./dockerode";
+import { insertVideo } from "../api/services/video.service";
+import { InsertedVideo } from "../types/video.types";
 
 const client = new SQSClient({
   region: process.env.AWS_REGION,
   endpoint: "http://localhost:4566", // For localstack
 });
+
+const extractIdFromPath = (path: string) => {
+  const fileName = path.split("/").pop() || '';
+  return fileName.split(".")[0];
+}
 
 export async function init() {
   const queueName = process.env.AWS_SQS_QUEUE_NAME;
@@ -51,7 +58,7 @@ export async function init() {
           object: { key },
         } = s3;
         console.log(`New video uploaded: ${bucket.name}/${key}`);
-        
+
         const rawBucket = process.env.AWS_RAW_BUCKET;
         if (!rawBucket) throw new Error('AWS_RAW_BUCKET env var is required');
 
@@ -61,6 +68,8 @@ export async function init() {
         const awsRegion = process.env.AWS_REGION;
         if (!awsRegion) throw new Error('AWS_REGION env var is required');
 
+
+        const videoId = extractIdFromPath(key);
         // Spin container
         await transcodeVideo(
           key,
@@ -68,6 +77,13 @@ export async function init() {
           processedBucket,
           awsRegion
         );
+        
+        const videoData = insertVideo({
+          //TODO: make dynmaic after auth-flow
+          userId: '1',
+          videoId,
+          status: 'PROCESSING',
+        })
       }
 
       //  Delete message from queue
