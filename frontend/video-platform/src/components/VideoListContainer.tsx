@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { getVideoList } from '../apis/video';
-import type { Video } from '../types';
+import React, {  } from 'react';
 import VideoList from './VideoList';
+import { useVideos } from '../hooks/useVideo';
 
 interface VideoListContainerProps {
   onVideoSelect: (videoId: string) => void;
@@ -12,45 +11,8 @@ const VideoListContainer: React.FC<VideoListContainerProps> = ({
   onVideoSelect,
   onEmbedClick,
 }) => {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const videoList = await getVideoList();
-        setVideos(videoList);
-      } catch (err) {
-        console.error('Failed to fetch videos:', err);
-        setError('Failed to load videos. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVideos();
-  }, []);
-
-  const handleRefresh = () => {
-    const fetchVideos = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const videoList = await getVideoList();
-        setVideos(videoList);
-      } catch (err) {
-        console.error('Failed to fetch videos:', err);
-        setError('Failed to load videos. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVideos();
-  };
+ const { videos, loading, error, refresh } = useVideos();
+  
 
   if (error) {
     return (
@@ -64,7 +26,7 @@ const VideoListContainer: React.FC<VideoListContainerProps> = ({
           <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Videos</h3>
           <p className="text-red-700 mb-4">{error}</p>
           <button
-            onClick={handleRefresh}
+            onClick={refresh}
             className="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

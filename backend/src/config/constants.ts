@@ -6,3 +6,12 @@ export const HTTP_STATUS = {
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500
 } as const;
+
+export const RESOLUTION_MAP: Record<string, string> = {
+  '1920x1080': '1080p',
+  '1280x720': '720p',
+  '854x480': '480p',
+  '640x360': '360p',
+};
+
+export const AWS_PROCESSED_BUCKET: string|undefined = process.env.AWS_PROCESSED_BUCKET;

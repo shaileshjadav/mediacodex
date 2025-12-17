@@ -52,11 +52,14 @@ export interface TranscodingJobPayload {
   }>;
 }
 
+export type ProcessedUrls = Record<string, string>;
+
 export interface Video {
   id:string;
   userId:string;
   videoId:string;
   status:string;
+  processedUrls:ProcessedUrls;
   createdAt:string;
   updatedAt:string;
 }

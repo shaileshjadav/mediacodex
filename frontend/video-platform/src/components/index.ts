@@ -5,4 +5,6 @@ export { default as VideoList } from './VideoList';
 export { default as VideoListContainer } from './VideoListContainer';
 export { default as VideoCard } from './VideoCard';
 export { UploadModal } from './UploadModal';
+export { VideoPlayerModal } from './VideoPlayerModal';
+export { VideoPlayerDemo } from './VideoPlayerDemo';
 export { default as StatusPage } from './StatusPage';

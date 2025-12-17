@@ -1,28 +1,45 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SignInButton } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
+import { VideoProvider } from './contexts/VideoContext';
 import { useAuth } from './hooks/useAuth';
-import { LayoutWrapper, UploadModal, VideoList, StatusPage, VideoListContainer } from './components';
-import type { Video } from './types';
+import { useVideos } from './hooks/useVideo';
+import { LayoutWrapper, UploadModal, StatusPage, VideoListContainer, VideoPlayerModal } from './components';
+import { VideoPlayerDemo } from './components/VideoPlayerDemo';
 import { useState } from 'react';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <VideoProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </VideoProvider>
     </AuthProvider>
   );
 }
 
 function LoadingDemoPage() {
+  const { videos, selectVideo, selectedVideo, clearSelectedVideo } = useVideos();
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+
   const handleVideoSelect = (videoId: string) => {
-    console.log('Selected video:', videoId);
+    const video = videos.find(v => v.videoId === videoId);
+    if(video){
+      selectVideo(video);
+      setIsPlayerModalOpen(true);
+    }
+    
   };
 
   const handleEmbedClick = (videoId: string) => {
     console.log('Embed video:', videoId);
+  };
+
+  const handleClosePlayerModal = () => {
+    setIsPlayerModalOpen(false);
+    clearSelectedVideo();
   };
 
   return (
@@ -34,17 +51,32 @@ function LoadingDemoPage() {
       <VideoListContainer 
         onVideoSelect={handleVideoSelect}
         onEmbedClick={handleEmbedClick}/>
+      
+      <VideoPlayerModal
+        isOpen={isPlayerModalOpen}
+        onClose={handleClosePlayerModal}
+        video={selectedVideo}
+      />
     </div>
   );
 }
 
 function EmptyDemoPage() {
+  const { selectVideo, selectedVideo, clearSelectedVideo } = useVideos();
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+
   const handleVideoSelect = (videoId: string) => {
-    console.log('Selected video:', videoId);
+    selectVideo(videoId);
+    setIsPlayerModalOpen(true);
   };
 
   const handleEmbedClick = (videoId: string) => {
     console.log('Embed video:', videoId);
+  };
+
+  const handleClosePlayerModal = () => {
+    setIsPlayerModalOpen(false);
+    clearSelectedVideo();
   };
 
   return (
@@ -56,124 +88,39 @@ function EmptyDemoPage() {
       <VideoListContainer 
         onVideoSelect={handleVideoSelect}
         onEmbedClick={handleEmbedClick}/>
+      
+      <VideoPlayerModal
+        isOpen={isPlayerModalOpen}
+        onClose={handleClosePlayerModal}
+        video={selectedVideo}
+      />
     </div>
   );
 }
 
 function DashboardPage() {
-   const [isModalOpen, setIsModalOpen] = useState(false);
-    const [lastUploadedVideoId, setLastUploadedVideoId] = useState<string | null>(null);
-  
-    const handleUploadComplete = (videoId: string) => {
-      setLastUploadedVideoId(videoId);
-      setIsModalOpen(false);
-      // In a real app, this would redirect to the status page
-      console.log('Upload completed for video:', videoId);
-    };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const { videos, selectedVideo, selectVideo,  refreshVideos } = useVideos();
 
-  // Mock data for demonstration
-  const mockVideos: Video[] = [
-    {
-      id: '1',
-      userId: 'user1',
-      title: 'Product Demo: Revolutionary AI Assistant',
-      description: 'A comprehensive walkthrough of our latest AI assistant features and capabilities that will transform your workflow.',
-      filename: 'ai-demo.mp4',
-      originalUrl: 'https://example.com/ai-demo.mp4',
-      processedUrls: {
-        '1080p': 'https://example.com/ai-demo_1080p.m3u8',
-        '720p': 'https://example.com/ai-demo_720p.m3u8',
-        '480p': 'https://example.com/ai-demo_480p.m3u8'
-      },
-      thumbnailUrl: 'https://via.placeholder.com/320x180/4F46E5/FFFFFF?text=AI+Demo',
-      duration: 245,
-      fileSize: 45728640, // 43MB
-      status: 'completed',
-      uploadedAt: new Date('2024-01-15'),
-      processedAt: new Date('2024-01-15')
-    },
-    {
-      id: '2',
-      userId: 'user1',
-      title: 'Team Meeting Recording - Q1 Planning',
-      description: 'Strategic planning session for Q1 objectives and key results discussion.',
-      filename: 'team-meeting.mp4',
-      originalUrl: 'https://example.com/team-meeting.mp4',
-      processedUrls: {},
-      duration: 3600,
-      fileSize: 125165824, // 119MB
-      status: 'processing',
-      uploadedAt: new Date('2024-01-16')
-    },
-    {
-      id: '3',
-      userId: 'user1',
-      title: 'Tutorial: Getting Started with React',
-      description: 'A beginner-friendly guide to building your first React application from scratch.',
-      filename: 'react-tutorial.mp4',
-      originalUrl: 'https://example.com/react-tutorial.mp4',
-      processedUrls: {},
-      fileSize: 152428800, // 145MB
-      status: 'failed',
-      uploadedAt: new Date('2024-01-17')
-    },
-    {
-      id: '4',
-      userId: 'user1',
-      title: 'Customer Success Story: TechCorp',
-      description: 'How TechCorp increased their productivity by 300% using our platform.',
-      filename: 'success-story.mp4',
-      originalUrl: 'https://example.com/success-story.mp4',
-      processedUrls: {
-        '720p': 'https://example.com/success-story_720p.m3u8'
-      },
-      thumbnailUrl: 'https://via.placeholder.com/320x180/10B981/FFFFFF?text=Success+Story',
-      duration: 180,
-      fileSize: 28728640, // 27MB
-      status: 'completed',
-      uploadedAt: new Date('2024-01-14'),
-      processedAt: new Date('2024-01-14')
-    },
-    {
-      id: '5',
-      userId: 'user1',
-      title: 'Webinar: Future of Remote Work',
-      description: 'Industry experts discuss trends and predictions for the future of remote work.',
-      filename: 'webinar.mp4',
-      originalUrl: 'https://example.com/webinar.mp4',
-      processedUrls: {},
-      duration: 2700,
-      fileSize: 95165824, // 90MB
-      status: 'pending',
-      uploadedAt: new Date('2024-01-18')
-    },
-    {
-      id: '6',
-      userId: 'user1',
-      title: 'Behind the Scenes: Office Tour',
-      description: 'Take a virtual tour of our modern office space and meet the team.',
-      filename: 'office-tour.mp4',
-      originalUrl: 'https://example.com/office-tour.mp4',
-      processedUrls: {
-        '1080p': 'https://example.com/office-tour_1080p.m3u8',
-        '720p': 'https://example.com/office-tour_720p.m3u8'
-      },
-      thumbnailUrl: 'https://via.placeholder.com/320x180/8B5CF6/FFFFFF?text=Office+Tour',
-      duration: 420,
-      fileSize: 65728640, // 62MB
-      status: 'completed',
-      uploadedAt: new Date('2024-01-13'),
-      processedAt: new Date('2024-01-13')
-    }
-  ];
+  const handleUploadComplete = (videoId: string) => {
+    setIsModalOpen(false);
+    refreshVideos(); // Refresh the video list after upload
+    console.log('Upload completed for video:', videoId);
+  };
 
   const handleVideoSelect = (videoId: string) => {
-    console.log('Selected video:', videoId);
+     const video = videos.find(v => v.videoId === videoId);
+    if(video){
+      selectVideo(video);
+      setIsPlayerModalOpen(true);
+    }
+    
   };
 
   const handleEmbedClick = (videoId: string) => {
     console.log('Embed video:', videoId);
-  };
+  }   
 
   return (
     <div className="space-y-8">
@@ -196,6 +143,12 @@ function DashboardPage() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onUploadComplete={handleUploadComplete}
+          />
+
+          <VideoPlayerModal
+            isOpen={isPlayerModalOpen}
+            onClose={() => setIsPlayerModalOpen(false)}
+            video={selectedVideo}
           />
           
         <VideoListContainer 
@@ -310,6 +263,10 @@ function AppContent() {
         <Route
           path="/status/:videoId"
           element={<StatusPage />}
+        />
+        <Route
+          path="/video-player-demo"
+          element={<VideoPlayerDemo />}
         />
       </Routes>
     </LayoutWrapper>
