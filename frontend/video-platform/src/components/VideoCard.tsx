@@ -7,27 +7,16 @@ interface VideoCardProps {
   onEmbedClick: () => void;
 }
 
-const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect, onEmbedClick }) => {
-  const formatFileSize = (bytes: number): string => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
+const VideoCard: React.FC<VideoCardProps> = ({
+  video,
+  onSelect,
+  onEmbedClick,
+}) => {
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return 'Unknown';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (date: Date): string => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   const getStatusColor = (status: VideoStatus): string => {
@@ -52,38 +41,64 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect, onEmbedClick }) 
       case 'completed':
         return (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
           </svg>
         );
       case 'processing':
         return (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
         );
       case 'failed':
         return (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
           </svg>
         );
       default:
         return (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+              clipRule="evenodd"
+            />
           </svg>
         );
     }
   };
 
   return (
-    <div 
+    <div
       className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-gray-300 transition-all duration-300 transform hover:-translate-y-1"
       data-testid="video-card"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 cursor-pointer overflow-hidden" onClick={onSelect}>
+      <div
+        className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 cursor-pointer overflow-hidden"
+        onClick={onSelect}
+      >
         {video.thumbnailUrl ? (
           <img
             src={video.thumbnailUrl}
@@ -110,18 +125,22 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect, onEmbedClick }) 
             </div>
           </div>
         )}
-        
+
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="bg-white/90 rounded-full p-3 shadow-lg">
-              <svg className="w-6 h-6 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
+              <svg
+                className="w-6 h-6 text-gray-800"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 5v14l11-7z" />
               </svg>
             </div>
           </div>
         </div>
-        
+
         {/* Duration overlay */}
         {video.duration && (
           <div className="absolute bottom-3 right-3 bg-black/80 text-white text-xs px-2.5 py-1 rounded-md font-medium">
@@ -130,7 +149,9 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect, onEmbedClick }) 
         )}
 
         {/* Status overlay */}
-        <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(video.status)}`}>
+        <div
+          className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(video.status)}`}
+        >
           {getStatusIcon(video.status)}
           {video.status.charAt(0).toUpperCase() + video.status.slice(1)}
         </div>
@@ -138,59 +159,40 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect, onEmbedClick }) 
 
       {/* Content */}
       <div className="p-5">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors leading-tight" onClick={onSelect}>
+        <h3
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors leading-tight"
+          onClick={onSelect}
+        >
           {video.title}
         </h3>
-        
+
         {video.description && (
           <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">
             {video.description}
           </p>
         )}
 
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2">
-          <div className="flex items-center">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>{formatDate(video.uploadedAt)}</span>
-          </div>
-          <div className="flex items-center">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            <span>{formatFileSize(video.fileSize)}</span>
-          </div>
-        </div>
-
         {/* Action buttons */}
         <div className="flex gap-2">
           <button
-            onClick={onSelect}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-          >
-            <span className="flex items-center justify-center">
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              View
-            </span>
-          </button>
-          <button
             onClick={onEmbedClick}
-            disabled={video.status !== 'completed'}
-            className={`flex-1 text-sm font-medium py-2.5 px-4 rounded-lg transition-all duration-200 ${
-              video.status === 'completed'
-                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm hover:shadow-md transform hover:scale-105'
-                : 'bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-            }`}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium py-3 px-4 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
           >
             <span className="flex items-center justify-center">
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
               </svg>
-              Embed
+              Generate Embed Code
             </span>
           </button>
         </div>
