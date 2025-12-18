@@ -16,9 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const navigation = [
     // { name: 'Home', href: '/', current: location.pathname === '/' },
     { name: 'Dashboard', href: '/dashboard', current: location.pathname === '/dashboard' },
-    { name: 'Player Demo', href: '/video-player-demo', current: location.pathname === '/video-player-demo' },
-    { name: 'Empty Demo', href: '/empty-demo', current: location.pathname === '/empty-demo' },
-    { name: 'Loading Demo', href: '/loading-demo', current: location.pathname === '/loading-demo' },
+    
     ...(isSignedIn
       ? [
           {

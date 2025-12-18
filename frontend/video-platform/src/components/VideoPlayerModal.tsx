@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import ReactPlayer from 'react-player';
 import type { Video } from '../types';
+import Hls from 'hls.js';
+import { usePresignedVideoUrl } from '../hooks/usePresignedVideoUrl';
 
 interface VideoPlayerModalProps {
   isOpen: boolean;
@@ -26,25 +29,88 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const { url, loading } = usePresignedVideoUrl(
+    video?.videoId,
+    selectedQuality
+  );
+
+  // HLS setup effect
+  useEffect(() => {
+    if (!video || !videoRef.current) return;
+    console.log('URL', url);
+    if (!url) return;
+
+    // Cleanup previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (Hls.isSupported()) {
+      // If HLS.js is supported, initialize it
+      const hls = new Hls();
+      hlsRef.current = hls;
+
+      hls.loadSource(url);
+      hls.attachMedia(videoRef.current);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('Manifest parsed, video ready to play');
+      });
+
+      hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
+        console.error('HLS error:', data);
+        // Implement custom error handling or recovery
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('Fatal network error encountered, try to recover');
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('Fatal media error encountered, try to recover');
+              hls.recoverMediaError();
+              break;
+            default:
+              console.log('Fatal error, cannot recover');
+              hls.destroy();
+              break;
+          }
+        }
+      });
+    } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+      // Fallback for native HLS support (e.g., in Safari)
+      videoRef.current.src = url;
+    }
+
+    // Cleanup function
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [video, selectedQuality]);
 
   // Available quality options based on processed URLs
   const getQualityOptions = (): QualityOption[] => {
-    console.log("video", video);
     if (!video?.processedUrls) {
-      return [{ label: 'Original', value: 'original', url: video?.originalUrl }];
+      return [
+        { label: 'Original', value: 'original', url: video?.originalUrl },
+      ];
     }
 
     const options: QualityOption[] = [];
-    
+
     // Add processed qualities
     Object.entries(video.processedUrls).forEach(([resolution, url]) => {
       options.push({
         label: resolution,
         value: resolution,
-        url: url
+        url: url,
       });
     });
 
@@ -58,17 +124,26 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
     // Add original if no processed versions
     if (options.length === 0) {
-      options.push({ label: 'Original', value: 'original', url: video?.originalUrl });
+      options.push({
+        label: 'Original',
+        value: 'original',
+        url: video?.originalUrl,
+      });
     }
 
     return options;
   };
 
   const qualityOptions = getQualityOptions();
-  const currentVideoUrl = qualityOptions.find(q => q.value === selectedQuality)?.url || video?.originalUrl;
-
+  const currentVideoUrl =
+    qualityOptions.find((q) => q.value === selectedQuality)?.url ||
+    video?.originalUrl;
   useEffect(() => {
-    if (qualityOptions.length > 0 && !qualityOptions.find(q => q.value === selectedQuality)) {
+    if (
+      qualityOptions.length > 0 &&
+      !qualityOptions.find((q) => q.value === selectedQuality)
+    ) {
+      console.log('qualityOptions[0].value', qualityOptions[0].value);
       setSelectedQuality(qualityOptions[0].value);
     }
   }, [video, qualityOptions, selectedQuality]);
@@ -114,10 +189,10 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const handleQualityChange = (quality: string) => {
     const currentTimeBeforeChange = videoRef.current?.currentTime || 0;
     const wasPlaying = isPlaying;
-    
+
     setSelectedQuality(quality);
     setShowQualityMenu(false);
-    
+
     // Restore playback state after quality change
     setTimeout(() => {
       if (videoRef.current) {
@@ -158,13 +233,13 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div className="flex items-center justify-center min-h-screen">
         {/* Background overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 transition-opacity"
           onClick={handleClose}
         />
 
         {/* Modal panel */}
-        <div 
+        <div
           ref={containerRef}
           className="relative w-full max-w-6xl mx-4 bg-black rounded-lg overflow-hidden shadow-2xl"
         >
@@ -192,10 +267,11 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
           {/* Video Player */}
           <div className="relative aspect-video bg-black">
-            <video
+            <ReactPlayer
+              width="100%"
+              height="100%"
               ref={videoRef}
-              src={currentVideoUrl}
-              className="w-full h-full object-contain"
+              src={url}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onTimeUpdate={handleTimeUpdate}
@@ -205,14 +281,18 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             />
 
             {/* Play/Pause Overlay */}
-            <div 
+            <div
               className="absolute inset-0 flex items-center justify-center cursor-pointer"
               onClick={handlePlayPause}
             >
               {!isPlaying && (
                 <div className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors">
-                  <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
+                  <svg
+                    className="w-12 h-12 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               )}
@@ -231,7 +311,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                 onChange={handleSeek}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, #4b5563 ${(currentTime / duration) * 100}%, #4b5563 100%)`
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, #4b5563 ${(currentTime / duration) * 100}%, #4b5563 100%)`,
                 }}
               />
             </div>
@@ -245,12 +325,20 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   className="hover:text-blue-400 transition-colors"
                 >
                   {isPlaying ? (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                     </svg>
                   ) : (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
                 </button>
@@ -262,8 +350,12 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
                 {/* Volume Control */}
                 <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                   </svg>
                   <input
                     type="range"
@@ -299,7 +391,9 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                             key={option.value}
                             onClick={() => handleQualityChange(option.value)}
                             className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors ${
-                              selectedQuality === option.value ? 'text-blue-400 bg-gray-700' : 'text-white'
+                              selectedQuality === option.value
+                                ? 'text-blue-400 bg-gray-700'
+                                : 'text-white'
                             }`}
                           >
                             {option.label}
@@ -315,8 +409,12 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   onClick={toggleFullscreen}
                   className="hover:text-blue-400 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
                   </svg>
                 </button>
               </div>

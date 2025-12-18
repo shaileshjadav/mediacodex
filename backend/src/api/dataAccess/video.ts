@@ -42,3 +42,22 @@ export const getVideoList = async (): Promise<Video[]> => {
     }
 };
 
+
+export const getVideoById = async (videoId:string): Promise<Video> => {
+    const client = await pool.connect();
+    try {
+        const query = `
+      SELECT id, "userId", "videoId", "status", "createdAt", "updatedAt"
+      FROM "videos"
+      WHERE "videoId" = $1;
+    `;
+
+        const result = await client.query(query,[videoId]);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+

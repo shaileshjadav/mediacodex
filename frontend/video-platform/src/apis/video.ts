@@ -14,6 +14,14 @@ export const getVideoList = async (): Promise<Video[]> => {
   return response.data;
 };
 
+export const getVideoPresignedUrl = async (videoId: string, quality: string): Promise<any> => {
+  const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/videos/presigned-url`, {
+    videoId,
+    quality
+  });
+  return response.data;
+};
+
 export const uploadOnObjectStore = (
   uploadUrl: string,
   uploadData: any,

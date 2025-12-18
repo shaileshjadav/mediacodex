@@ -5,7 +5,6 @@ import { VideoProvider } from './contexts/VideoContext';
 import { useAuth } from './hooks/useAuth';
 import { useVideos } from './hooks/useVideo';
 import { LayoutWrapper, UploadModal, StatusPage, VideoListContainer, VideoPlayerModal } from './components';
-import { VideoPlayerDemo } from './components/VideoPlayerDemo';
 import { useState } from 'react';
 
 function App() {
@@ -20,97 +19,20 @@ function App() {
   );
 }
 
-function LoadingDemoPage() {
-  const { videos, selectVideo, selectedVideo, clearSelectedVideo } = useVideos();
-  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
-
-  const handleVideoSelect = (videoId: string) => {
-    const video = videos.find(v => v.videoId === videoId);
-    if(video){
-      selectVideo(video);
-      setIsPlayerModalOpen(true);
-    }
-    
-  };
-
-  const handleEmbedClick = (videoId: string) => {
-    console.log('Embed video:', videoId);
-  };
-
-  const handleClosePlayerModal = () => {
-    setIsPlayerModalOpen(false);
-    clearSelectedVideo();
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Loading State Demo</h1>
-        <p className="text-gray-600">See how the interface looks while loading content</p>
-      </div>
-      <VideoListContainer 
-        onVideoSelect={handleVideoSelect}
-        onEmbedClick={handleEmbedClick}/>
-      
-      <VideoPlayerModal
-        isOpen={isPlayerModalOpen}
-        onClose={handleClosePlayerModal}
-        video={selectedVideo}
-      />
-    </div>
-  );
-}
-
-function EmptyDemoPage() {
-  const { selectVideo, selectedVideo, clearSelectedVideo } = useVideos();
-  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
-
-  const handleVideoSelect = (videoId: string) => {
-    selectVideo(videoId);
-    setIsPlayerModalOpen(true);
-  };
-
-  const handleEmbedClick = (videoId: string) => {
-    console.log('Embed video:', videoId);
-  };
-
-  const handleClosePlayerModal = () => {
-    setIsPlayerModalOpen(false);
-    clearSelectedVideo();
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Empty State Demo</h1>
-        <p className="text-gray-600">See how the interface looks when no videos are present</p>
-      </div>
-      <VideoListContainer 
-        onVideoSelect={handleVideoSelect}
-        onEmbedClick={handleEmbedClick}/>
-      
-      <VideoPlayerModal
-        isOpen={isPlayerModalOpen}
-        onClose={handleClosePlayerModal}
-        video={selectedVideo}
-      />
-    </div>
-  );
-}
 
 function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
-  const { videos, selectedVideo, selectVideo,  refreshVideos } = useVideos();
+  const { videos, selectedVideo, selectVideo,  refresh } = useVideos();
 
   const handleUploadComplete = (videoId: string) => {
     setIsModalOpen(false);
-    refreshVideos(); // Refresh the video list after upload
+    refresh(); // Refresh the video list after upload
     console.log('Upload completed for video:', videoId);
   };
 
   const handleVideoSelect = (videoId: string) => {
-     const video = videos.find(v => v.videoId === videoId);
+     const video = videos.find(v => v.id === videoId);
     if(video){
       selectVideo(video);
       setIsPlayerModalOpen(true);
@@ -253,21 +175,10 @@ function AppContent() {
           }
         />
         <Route
-          path="/empty-demo"
-          element={<EmptyDemoPage />}
-        />
-        <Route
-          path="/loading-demo"
-          element={<LoadingDemoPage />}
-        />
-        <Route
           path="/status/:videoId"
           element={<StatusPage />}
         />
-        <Route
-          path="/video-player-demo"
-          element={<VideoPlayerDemo />}
-        />
+        
       </Routes>
     </LayoutWrapper>
   );

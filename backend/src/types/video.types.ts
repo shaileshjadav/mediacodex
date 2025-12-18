@@ -6,6 +6,11 @@ export interface GetUploadUrlRequestBody {
   contentType: string;
 }
 
+export interface GetPresigneUrlRequestBody {
+  videoId: string;
+  quality: string;
+}
+
 /**
  * Response returned to frontend for direct S3 upload
  */

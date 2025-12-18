@@ -12,6 +12,10 @@ echo "Configuring CORS for raw-videos bucket..."
 aws --endpoint-url=$ENDPOINT s3api put-bucket-cors --bucket raw-videos --cors-configuration file://cors-config.json
 
 
+echo "Configuring CORS for processed-videos bucket..."
+aws --endpoint-url=$ENDPOINT s3api put-bucket-cors --bucket processed-videos --cors-configuration file://cors-config.json
+
+
 echo "Creating SQS queue..."
 aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name video-upload-events
 
