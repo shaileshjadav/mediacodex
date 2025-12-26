@@ -36,35 +36,73 @@ export const insertVideo = async (
   return await videoDal.insertVideo(insertVideoPayload);
 };
 
-async function getProcessedUrlsFromS3(
+export async function getProcessedUrlsFromS3(
   bucket: string,
   prefix: string, // videoId/
 ): Promise<ProcessedUrls> {
   const processedUrls: ProcessedUrls = {};
+
+  console.log(
+    `Searching for processed videos in bucket: ${bucket}, prefix: ${prefix}`,
+  );
 
   const command = new ListObjectsV2Command({
     Bucket: bucket,
     Prefix: prefix,
   });
 
-  const response = await s3Client.send(command);
+  try {
+    const response = await s3Client.send(command);
 
-  if (!response.Contents) return processedUrls;
+    console.log(`S3 ListObjects response:`, {
+      KeyCount: response.KeyCount,
+      Contents: response.Contents?.map((obj) => obj.Key) || [],
+    });
 
-  for (const object of response.Contents) {
-    const key = object.Key;
-    if (!key || !key.endsWith("playlist.m3u8")) continue;
+    if (!response.Contents || response.Contents.length === 0) {
+      console.log(`No objects found in S3 for prefix: ${prefix}`);
+      return processedUrls;
+    }
 
-    // videoId/1280x720/playlist.m3u8
-    const [, resolution] = key.split("/");
+    for (const object of response.Contents) {
+      const key = object.Key;
+      console.log(`Processing S3 object: ${key}`);
 
-    const label = RESOLUTION_MAP[resolution];
-    if (!label) continue;
+      if (!key || !key.endsWith("playlist.m3u8")) {
+        console.log(`Skipping non-playlist file: ${key}`);
+        continue;
+      }
 
-    processedUrls[label] = key;
+      // videoId/1280x720/playlist.m3u8
+      const pathParts = key.split("/");
+      console.log(`Key path parts:`, pathParts);
+
+      if (pathParts.length < 3) {
+        console.log(`Invalid key structure: ${key}`);
+        continue;
+      }
+
+      const [, resolution] = pathParts;
+      console.log(`Found resolution: ${resolution}`);
+
+      const label = RESOLUTION_MAP[resolution];
+      console.log(`Resolution mapping: ${resolution} -> ${label}`);
+
+      if (!label) {
+        console.log(`No label found for resolution: ${resolution}`);
+        continue;
+      }
+
+      processedUrls[label] = key;
+      console.log(`Added to processedUrls: ${label} = ${key}`);
+    }
+
+    console.log("Final processedUrls:", processedUrls);
+    return processedUrls;
+  } catch (error) {
+    console.error(`Error fetching processed URLs from S3:`, error);
+    throw error;
   }
-
-  return processedUrls;
 }
 
 async function getVideoPresignedUrl(
