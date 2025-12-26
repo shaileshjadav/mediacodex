@@ -76,8 +76,7 @@ CREATE TABLE videos (
        - Backend validates token and generate pre-signed URL
        - Frontend:
              - Create a new page
-                ```
-                https://player.yourapp.com/embed/:videoId
+                ```https://player.yourapp.com/embed/:videoId
                 ```
         Flow:
         Load embed page
@@ -115,3 +114,8 @@ CREATE TABLE videos (
 
     - Display code with syntax highlighting and copy functionality -> Done
     - Add embed customization options -> Done
+
+
+     - Api for generate a jwt embedded token which could be verified after generation
+     - Display in token in frontend
+     -

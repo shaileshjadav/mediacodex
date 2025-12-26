@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   XMarkIcon,
   ClipboardIcon,
   CheckIcon,
-  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import type { Video } from '../types';
+import { generateEmbedCode } from '../apis/video';
 
 interface EmbedModalProps {
   isOpen: boolean;
@@ -13,131 +13,49 @@ interface EmbedModalProps {
   video: Video | null;
 }
 
-interface EmbedOptions {
-  width: number;
-  height: number;
-  autoplay: boolean;
-  controls: boolean;
-  muted: boolean;
-  loop: boolean;
-  responsive: boolean;
-}
-
 export const EmbedModal: React.FC<EmbedModalProps> = ({
   isOpen,
   onClose,
   video,
 }) => {
-  const [embedOptions, setEmbedOptions] = useState<EmbedOptions>({
-    width: 640,
-    height: 360,
-    autoplay: false,
-    controls: true,
-    muted: false,
-    loop: false,
-    responsive: true,
-  });
+  const [embedCode, setEmbedCode] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const [copiedScript, setCopiedScript] = useState(false);
-  const [copiedIframe, setCopiedIframe] = useState(false);
-
-  const generateEmbedScript = (): string => {
-    if (!video) return '';
-
-    const videoUrl = video.processedUrls?.['720p'] || video.originalUrl;
-    const { width, height, autoplay, controls, muted, loop, responsive } =
-      embedOptions;
-
-    return `<!-- Video Platform Embed Script -->
-<div id="video-player-${video.id}" ${responsive ? 'style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;"' : `style="width: ${width}px; height: ${height}px;"`}>
-  <video 
-    ${responsive ? 'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"' : `width="${width}" height="${height}"`}
-    ${controls ? 'controls' : ''}
-    ${autoplay ? 'autoplay' : ''}
-    ${muted ? 'muted' : ''}
-    ${loop ? 'loop' : ''}
-    preload="metadata"
-    poster="${video.thumbnailUrl || ''}"
-  >
-    <source src="${videoUrl}" type="application/x-mpegURL">
-    <source src="${video.originalUrl}" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
-  (function() {
-    const video = document.querySelector('#video-player-${video.id} video');
-    const src = '${videoUrl}';
-    
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(src);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = src;
+  useEffect(() => {
+    if (isOpen && video) {
+      fetchEmbedCode();
     }
-  })();
-</script>`;
+  }, [isOpen, video]);
+
+  const fetchEmbedCode = async () => {
+    if (!video) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await generateEmbedCode(video.id);
+      setEmbedCode(response.embedCode);
+    } catch (err: any) {
+      console.error('Failed to generate embed code:', err);
+      setError(err.response?.data?.error || 'Failed to generate embed code');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const generateIframeEmbed = (): string => {
-    if (!video) return '';
-
-    const { width, height, responsive } = embedOptions;
-    const baseUrl = window.location.origin;
-    const embedUrl = `${baseUrl}/embed/${video.id}`;
-
-    if (responsive) {
-      return `<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
-  <iframe 
-    src="${embedUrl}" 
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-    frameborder="0" 
-    allowfullscreen>
-  </iframe>
-</div>`;
-    }
-
-    return `<iframe 
-  src="${embedUrl}" 
-  width="${width}" 
-  height="${height}" 
-  frameborder="0" 
-  allowfullscreen>
-</iframe>`;
-  };
-
-  const copyToClipboard = async (text: string, type: 'script' | 'iframe') => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      if (type === 'script') {
-        setCopiedScript(true);
-        setTimeout(() => setCopiedScript(false), 2000);
-      } else {
-        setCopiedIframe(true);
-        setTimeout(() => setCopiedIframe(false), 2000);
-      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
   };
 
-  const handleOptionChange = (
-    key: keyof EmbedOptions,
-    value: boolean | number
-  ) => {
-    setEmbedOptions((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
   if (!isOpen || !video) return null;
-
-  const embedScript = generateEmbedScript();
-  const iframeEmbed = generateIframeEmbed();
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -173,7 +91,7 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
                   <h3 className="text-xl font-bold text-gray-900">
                     Embed Video
                   </h3>
-                  <p className="text-sm text-gray-600">{video.title}</p>
+                  <p className="text-sm text-gray-600">Video ID: {video.id}</p>
                 </div>
               </div>
               <button
@@ -187,126 +105,35 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
 
           {/* Content */}
           <div className="bg-white px-8 py-8">
-            {/* Embed Options */}
-            <div className="mb-8">
-              <div className="flex items-center space-x-2 mb-4">
-                <Cog6ToothIcon className="w-5 h-5 text-gray-500" />
-                <h4 className="text-lg font-semibold text-gray-900">
-                  Customization Options
-                </h4>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">
+                  Generating embed code...
+                </span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Dimensions */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="responsive"
-                      checked={embedOptions.responsive}
-                      onChange={(e) =>
-                        handleOptionChange('responsive', e.target.checked)
-                      }
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label
-                      htmlFor="responsive"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Responsive (recommended)
-                    </label>
-                  </div>
-
-                  {!embedOptions.responsive && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Width
-                        </label>
-                        <input
-                          type="number"
-                          value={embedOptions.width}
-                          onChange={(e) =>
-                            handleOptionChange(
-                              'width',
-                              parseInt(e.target.value)
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          min="200"
-                          max="1920"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Height
-                        </label>
-                        <input
-                          type="number"
-                          value={embedOptions.height}
-                          onChange={(e) =>
-                            handleOptionChange(
-                              'height',
-                              parseInt(e.target.value)
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          min="150"
-                          max="1080"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Player Options */}
-                <div className="space-y-3">
-                  {[
-                    { key: 'controls', label: 'Show controls' },
-                    { key: 'autoplay', label: 'Autoplay' },
-                    { key: 'muted', label: 'Muted' },
-                    { key: 'loop', label: 'Loop' },
-                  ].map(({ key, label }) => (
-                    <div key={key} className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        id={key}
-                        checked={
-                          embedOptions[key as keyof EmbedOptions] as boolean
-                        }
-                        onChange={(e) =>
-                          handleOptionChange(
-                            key as keyof EmbedOptions,
-                            e.target.checked
-                          )
-                        }
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <label
-                        htmlFor={key}
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        {label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="text-red-500 text-xl mb-2">⚠️</div>
+                <p className="text-red-600 mb-4">{error}</p>
+                <button
+                  onClick={fetchEmbedCode}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
-            </div>
-
-            {/* Embed Code Sections */}
-            <div className="space-y-8">
-              {/* JavaScript Embed */}
+            ) : (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-lg font-semibold text-gray-900">
-                    JavaScript Embed (Recommended)
+                    Embed Code
                   </h4>
                   <button
-                    onClick={() => copyToClipboard(embedScript, 'script')}
+                    onClick={() => copyToClipboard(embedCode)}
                     className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {copiedScript ? (
+                    {copied ? (
                       <>
                         <CheckIcon className="w-4 h-4" />
                         <span>Copied!</span>
@@ -321,48 +148,15 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
                 </div>
                 <div className="relative">
                   <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                    <code>{embedScript}</code>
+                    <code>{embedCode}</code>
                   </pre>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  This embed includes HLS.js for adaptive streaming and fallback
-                  support.
+                  This embed code includes secure token-based authentication and
+                  will expire in 5 minutes.
                 </p>
               </div>
-
-              {/* iFrame Embed */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    iFrame Embed
-                  </h4>
-                  <button
-                    onClick={() => copyToClipboard(iframeEmbed, 'iframe')}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    {copiedIframe ? (
-                      <>
-                        <CheckIcon className="w-4 h-4" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ClipboardIcon className="w-4 h-4" />
-                        <span>Copy Code</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="relative">
-                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                    <code>{iframeEmbed}</code>
-                  </pre>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Simple iframe embed for basic integration.
-                </p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}
