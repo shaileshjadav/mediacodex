@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { verifyEmbedToken } from "../../utils/jwt";
 import { AWS_PROCESSED_BUCKET } from "../../config/constants";
-import { getProcessedUrlsFromS3 } from "../services/video.service";
+import {
+  getProcessedUrlsFromS3,
+  getVideoDetailsById,
+} from "../services/video.service";
 import { ProcessedUrls } from "../../types/video.types";
 
 interface PlayerSessionRequest {
@@ -66,9 +69,11 @@ export const createPlayerSession = async (
     if (!AWS_PROCESSED_BUCKET) {
       throw Error("AWS config is not valid");
     }
+    const videoDetails = await getVideoDetailsById(videoId);
+
     const processedUrls = await getProcessedUrlsFromS3(
       AWS_PROCESSED_BUCKET,
-      videoId,
+      videoDetails.videoId,
     );
     console.log("processed Url", processedUrls);
 

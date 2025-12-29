@@ -183,3 +183,12 @@ export const getPresignedUrl = async (
 
   return presignedUrl;
 };
+
+export const getVideoDetailsById = async (videoId: string): Promise<Video> => {
+  const videoDetails = await videoDal.getVideoById(videoId);
+
+  if (!videoDetails) {
+    throw Error("Video id is invalid or resource not found");
+  }
+  return videoDetails;
+};

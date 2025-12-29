@@ -35,7 +35,7 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await generateEmbedCode(video.id);
+      const response = await generateEmbedCode(video.videoId);
       setEmbedCode(response.embedCode);
     } catch (err: any) {
       console.error('Failed to generate embed code:', err);

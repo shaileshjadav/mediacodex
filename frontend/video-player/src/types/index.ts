@@ -1,18 +1,8 @@
 // Core types for the video platform
 
-export interface User {
-  id: string;
-  clerkId: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Video {
   id: string;
-  videoId: string;
+  videoId?: string;
   userId?: string;
   title: string;
   description?: string;

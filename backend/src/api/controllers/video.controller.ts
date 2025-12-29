@@ -63,7 +63,7 @@ export const generateEmbedCode = async (
     });
 
     // Generate embed code
-    const embedUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/embed/${videoId}?token=${token}`;
+    const embedUrl = `${process.env.VIDEO_PLAYER_HOST}/embed/${videoId}?token=${token}`;
     const embedCode = `<iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
 
     res.status(200).json({
