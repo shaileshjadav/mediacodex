@@ -1,0 +1,6 @@
+# Copy this file to terraform.tfvars and update with your values
+access_key = "test"
+secret_key = "test"
+region = "ap-south-1"
+raw_bucket_name = "raw-videos"
+processed_bucket_name = "processed-videos"
