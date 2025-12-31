@@ -3,7 +3,7 @@ services:
     image: localstack/localstack:latest
     container_name: localstack
     ports:
-      - "4566:4566"   # LocalStack edge/ALL services port
+      - "4566:4566" # LocalStack edge/ALL services port
       - "4571:4571"
     environment:
       - SERVICES=s3,sqs
@@ -16,8 +16,64 @@ services:
     networks:
       - localstack-network
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: video-transcoding-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=video_transcoding
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d
+    networks:
+      - localstack-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: video-transcoding-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - ENVIRONMENT=dev
+      - AWS_SQS_URL=http://localstack:4566/000000000000/video-upload-events
+      - AWS_SQS_QUEUE_NAME=video-upload-events
+      - AWS_REGION=ap-south-1
+      - AWS_RAW_BUCKET=raw-videos
+      - AWS_PROCESSED_BUCKET=processed-videos
+      - AWS_ENDPOINT_MODE=localstack
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=video_transcoding
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/video_transcoding?sslmode=disable
+      - VIDEO_PLAYER_HOST=http://localhost:5174
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - localstack-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
 
 networks:
   localstack-network:
-    name: localstack-network  
+    name: localstack-network
     driver: bridge
