@@ -10,7 +10,6 @@ variable "secret_key" {
     sensitive   = true
 }
 
-
 variable "region" {
     description = "AWS region"
     type        = string
@@ -26,4 +25,10 @@ variable "processed_bucket_name" {
     description = "AWS processed video bucket"
     type        = string
     default     = "processed-videos"
+}
+
+variable "sqs_queue_name" {
+    description = "SQS queue name for video upload events"
+    type        = string
+    default     = "video-upload-events"
 }

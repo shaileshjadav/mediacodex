@@ -30,4 +30,7 @@ provider "aws" {
     s3             = "http://localhost:4566"
     sqs            = "http://localhost:4566"
   }
+
+  # Force path-style S3 URLs for LocalStack
+  s3_use_path_style = true
 }
