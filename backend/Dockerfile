@@ -8,16 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci
+RUN npm ci 
 
 # Copy source code
 COPY . .
 
-# Build TypeScript to JavaScript
+# Build TypeScript to JavaScript (BEFORE removing devDependencies)
 RUN npm run build
 
-# Remove devDependencies to reduce image size
-RUN npm ci --only=production && npm cache clean --force
+# Remove devDependencies to reduce image size (AFTER build)
+RUN npm prune --production && npm cache clean --force
 
 # Expose port 3000
 EXPOSE 3000

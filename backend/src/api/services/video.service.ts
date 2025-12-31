@@ -136,7 +136,7 @@ async function getVideoPresignedUrl(
     if (!key || !key.endsWith("playlist.m3u8")) continue;
 
     // Join with aws bucket full link
-    const s3Endpoint = process.env.AWS_ENDPOINT_URL || "http://localhost:4566";
+    const s3Endpoint = process.env.AWS_ENDPOINT_URL;
     const fullUrl = `${s3Endpoint}/${bucket}/${key}`;
     return fullUrl;
   }

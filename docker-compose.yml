@@ -45,18 +45,26 @@ services:
       - "3000:3000"
     environment:
       - ENVIRONMENT=dev
+      # AWS Credentials (dummy values for LocalStack)
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=ap-south-1
+      - AWS_REGION=ap-south-1
+      # LocalStack specific settings
       - AWS_SQS_URL=http://localstack:4566/000000000000/video-upload-events
       - AWS_SQS_QUEUE_NAME=video-upload-events
-      - AWS_REGION=ap-south-1
       - AWS_RAW_BUCKET=raw-videos
       - AWS_PROCESSED_BUCKET=processed-videos
       - AWS_ENDPOINT_MODE=localstack
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      # Database settings
       - DB_HOST=postgres
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_DATABASE=video_transcoding
       - DB_PORT=5432
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/video_transcoding?sslmode=disable
+      # Other settings
       - VIDEO_PLAYER_HOST=http://localhost:5174
     volumes:
       - ./backend:/app

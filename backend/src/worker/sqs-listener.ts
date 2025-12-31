@@ -7,17 +7,25 @@ import type { S3Event } from "aws-lambda";
 
 import { transcodeVideo } from "./dockerode";
 import { insertVideo } from "../api/services/video.service";
-import { InsertedVideo } from "../types/video.types";
 
-const client = new SQSClient({
+const config: {
+  region: string;
+  endpoint?: string;
+} = {
   region: process.env.AWS_REGION,
-  endpoint: "http://localhost:4566", // For localstack
-});
+};
+const isLocalstack = process.env.AWS_ENDPOINT_MODE === "localstack";
+
+if (isLocalstack) {
+  config.endpoint = process.env.AWS_ENDPOINT_URL; // For localstack
+}
+
+const client = new SQSClient(config);
 
 const extractIdFromPath = (path: string) => {
-  const fileName = path.split("/").pop() || '';
+  const fileName = path.split("/").pop() || "";
   return fileName.split(".")[0];
-}
+};
 
 export async function init() {
   const queueName = process.env.AWS_SQS_QUEUE_NAME;
@@ -60,30 +68,25 @@ export async function init() {
         console.log(`New video uploaded: ${bucket.name}/${key}`);
 
         const rawBucket = process.env.AWS_RAW_BUCKET;
-        if (!rawBucket) throw new Error('AWS_RAW_BUCKET env var is required');
+        if (!rawBucket) throw new Error("AWS_RAW_BUCKET env var is required");
 
         const processedBucket = process.env.AWS_PROCESSED_BUCKET;
-        if (!processedBucket) throw new Error('AWS_PROCESSED_BUCKET env var is required');
+        if (!processedBucket)
+          throw new Error("AWS_PROCESSED_BUCKET env var is required");
 
         const awsRegion = process.env.AWS_REGION;
-        if (!awsRegion) throw new Error('AWS_REGION env var is required');
-
+        if (!awsRegion) throw new Error("AWS_REGION env var is required");
 
         const videoId = extractIdFromPath(key);
         // Spin container
-        await transcodeVideo(
-          key,
-          rawBucket,
-          processedBucket,
-          awsRegion
-        );
-        
+        await transcodeVideo(key, rawBucket, processedBucket, awsRegion);
+
         const videoData = insertVideo({
           //TODO: make dynmaic after auth-flow
-          userId: '1',
+          userId: "1",
           videoId,
-          status: 'PROCESSING',
-        })
+          status: "PROCESSING",
+        });
       }
 
       //  Delete message from queue
