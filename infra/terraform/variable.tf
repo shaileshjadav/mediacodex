@@ -32,3 +32,21 @@ variable "sqs_queue_name" {
     type        = string
     default     = "video-upload-events"
 }
+
+variable "ecr_repository_name" {
+    description = "ECR repository name for video transcoder"
+    type        = string
+    default     = "video-transcoder-repository"
+}
+
+variable "ecs_cluster_name" {
+    description = "ECS cluster name for video transcoding"
+    type        = string
+    default     = "video-transcoding-cluster"
+}
+
+variable "ecs_iam_task_role" {
+    description = "ECS role for task execution for video transcoding"
+    type        = string
+    default     = "video-transcoding-ecsTaskExecutionRole"
+}

@@ -6,15 +6,20 @@ services:
       - "4566:4566" # LocalStack edge/ALL services port
       - "4571:4571"
     environment:
-      - SERVICES=s3,sqs
+      - SERVICES=s3,sqs,ecr,ecs,iam,logs
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
-      - DEFAULT_REGION=us-east-1
+      - DEFAULT_REGION=ap-south-1
     volumes:
       - ./localstack:/data
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - localstack-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:16-alpine

@@ -31,6 +31,46 @@ resource "aws_s3_bucket_cors_configuration" "processed_bucket_cors" {
   }
 }
 
+# ECR Repository
+resource "aws_ecr_repository" "video_transcoder_repository" {
+  name = var.ecr_repository_name
+}
+
+# ECS Cluster
+resource "aws_ecs_cluster" "video_transcoding_cluster" {
+  name = var.ecs_cluster_name
+}
+
+# IAM Role for ECS Task Execution
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = var.ecs_iam_task_role
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Attach policy to ECS Task Execution Role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# CloudWatch Log Group for ECS
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name              = "/ecs/video-transcoder"
+  retention_in_days = 7
+}
+
 # SQS Queue
 resource "aws_sqs_queue" "video_upload_events" {
   name = var.sqs_queue_name
@@ -81,6 +121,26 @@ output "raw_bucket_name" {
 output "processed_bucket_name" {
   description = "Name of the processed videos bucket"
   value       = aws_s3_bucket.processed_bucket.id
+}
+
+output "ecr_repository_url" {
+  description = "URL of the ECR repository"
+  value       = aws_ecr_repository.video_transcoder_repository.repository_url
+}
+
+output "ecr_repository_name" {
+  description = "Name of the ECR repository"
+  value       = aws_ecr_repository.video_transcoder_repository.name
+}
+
+output "ecs_cluster_name" {
+  description = "Name of the ECS cluster"
+  value       = aws_ecs_cluster.video_transcoding_cluster.name
+}
+
+output "ecs_task_execution_role_arn" {
+  description = "ARN of the ECS task execution role"
+  value       = aws_iam_role.ecs_task_execution_role.arn
 }
 
 output "sqs_queue_url" {
