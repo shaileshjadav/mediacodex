@@ -3,11 +3,14 @@ const fs = require("node:fs/promises");
 const ffmpeg = require("fluent-ffmpeg");
 const { createReadStream, existsSync, mkdirSync } = require("node:fs");
 const path = require("node:path");
-// config env file
-require("dotenv").config();
+// // config env file
+// require("dotenv").config();
 
 // Set variables
-const originalFilePath = process.env.KEY;
+const originalFilePath = process.env.FILE_NAME;
+const inputBucket = process.env.INPUT_BUCKET;
+const outputBucket = process.env.OUTPUT_BUCKET;
+
 const outputBasePath = 'transcoded-videos';
 const segmentTime = 10;
 const codecVideo = 'libx264';
@@ -72,12 +75,11 @@ const getFiles = async (dir) => {
 
 const uploadDir = async (client, dir) => {
     const files = await getFiles(dir.localPath);
-    const UPLOAD_BUCKET_NAME = process.env.UPLOAD_BUCKET_NAME;
     const uploads = files.map(async (filePath) => {
         const fileName = filePath.split('/').pop();
         const bodyData = createReadStream(path.resolve(filePath));
         client.send(new PutObjectCommand({
-            Bucket: UPLOAD_BUCKET_NAME,
+            Bucket: outputBucket,
             Key: `${dir.objectStorePath}/${fileName}`,
             Body: bodyData,
         }));    
@@ -100,8 +102,8 @@ async function init(){
     try {
         const client = new S3Client({
             region: process.env.AWS_REGION,
-            endpoint: "http://localstack:4566", // For localstack
-            forcePathStyle:true, // for localstack
+            // endpoint: "http://localstack:4566", // For localstack
+            // forcePathStyle:true, // for localstack
             
             // credentials:{
             //     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -115,13 +117,11 @@ async function init(){
             // }
         });
         
-        const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-        const KEY = process.env.KEY;
         const videoId = extractIdFromPath(originalFilePath)
 
         const videoFile = await client.send(new GetObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: KEY,
+            Bucket: inputBucket,
+            Key: originalFilePath,
         }))
 
         

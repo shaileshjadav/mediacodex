@@ -82,6 +82,11 @@ After applying the Terraform configuration, you can set up ECS tasks manually if
      --cli-input-json file://task-definition.json
    ```
 
+5. **Verify task definition registration**
+   ```bash
+   aws --endpoint-url=http://localhost:4566 ecs list-task-definitions
+   ```
+
 ### Configuration Files
 
 The following JSON files are included for ECS setup:

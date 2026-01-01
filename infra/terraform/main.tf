@@ -71,6 +71,51 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
   retention_in_days = 7
 }
 
+# ECS Task Definition
+resource "aws_ecs_task_definition" "video_transcoder_task" {
+  family                   = "video-transcoder-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "1024"
+  memory                   = "2048"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "transcoder"
+      image     = "${aws_ecr_repository.video_transcoder_repository.repository_url}:latest"
+      essential = true
+      environment = [
+        {
+          name  = "INPUT_BUCKET"
+          value = var.raw_bucket_name
+        },
+        {
+          name  = "OUTPUT_BUCKET"
+          value = var.processed_bucket_name
+        },
+        {
+          name  = "AWS_REGION"
+          value = var.region
+        },
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_log_group.name
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
+
+  depends_on = [
+    aws_cloudwatch_log_group.ecs_log_group,
+    aws_iam_role_policy_attachment.ecs_task_execution_role_policy
+  ]
+}
+
 # SQS Queue
 resource "aws_sqs_queue" "video_upload_events" {
   name = var.sqs_queue_name
@@ -184,6 +229,11 @@ output "ecs_cluster_name" {
 output "ecs_task_execution_role_arn" {
   description = "ARN of the ECS task execution role"
   value       = aws_iam_role.ecs_task_execution_role.arn
+}
+
+output "ecs_task_definition_arn" {
+  description = "ARN of the ECS task definition"
+  value       = aws_ecs_task_definition.video_transcoder_task.arn
 }
 
 output "sqs_queue_url" {
