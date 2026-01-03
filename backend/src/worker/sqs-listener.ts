@@ -98,47 +98,56 @@ export async function init() {
         const videoId = extractIdFromPath(key);
         // Spin container
         // await transcodeVideo(key, rawBucket, processedBucket, awsRegion);
-
-        // Run ECS Task
-        const runTaskCommand = new RunTaskCommand({
-          cluster: process.env.ECS_CLUSTER_ARN,
-          launchType: "FARGATE",
-          taskDefinition: process.env.ECS_TASK_ARN,
-          count: 1,
-          platformVersion: "LATEST",
-          networkConfiguration: {
-            awsvpcConfiguration: {
-              subnets: process.env.ECS_TASK_SUBNETS?.split(","),
-              securityGroups: [process.env.ECS_SECURITY_GROUP || ''],
-              assignPublicIp: "ENABLED",
+        try {
+          // Run ECS Task
+          const runTaskCommand = new RunTaskCommand({
+            cluster: process.env.ECS_CLUSTER_ARN,
+            launchType: "FARGATE",
+            taskDefinition: process.env.ECS_TASK_ARN,
+            count: 1,
+            platformVersion: "LATEST",
+            networkConfiguration: {
+              awsvpcConfiguration: {
+                subnets: process.env.ECS_TASK_SUBNETS?.split(","),
+                securityGroups: [process.env.ECS_SECURITY_GROUP || ''],
+                assignPublicIp: "ENABLED",
+              },
             },
-          },
-          overrides: {
-            containerOverrides: [
-              {
-                name: process.env.ECS_TASK_CONTAINER_NAME,
-                environment: [
-                  { // KeyValuePair
-                    name: "UPLOAD_BUCKET_NAME",
-                    value: process.env.AWS_UPLOAD_BUCKET_NAME,
-                  },
-                  { // KeyValuePair
-                    name: "AWS_BUCKET_NAME",
-                    value: process.env.AWS_BUCKET_NAME,
-                  },
+            overrides: {
+              containerOverrides: [
+                {
+                  name: process.env.ECR_CONTAINER_NAME,
+                  environment: [
+                    {
+                      name: "AWS_REGION",
+                      value: process.env.AWS_REGION,
+                    },
+                    { 
+                      name: "INPUT_BUCKET",
+                      value: process.env.AWS_RAW_BUCKET,
+                    },
+                    { 
+                      name: "OUTPUT_BUCKET",
+                      value: process.env.AWS_PROCESSED_BUCKET,
+                    },
+                    { 
+                      name: "FILE_NAME",
+                      value: key,
+                    },
+                  ],
 
-                  { // KeyValuePair
-                    name: "FILE_NAME",
-                    value: key,
-                  },
-                ],
+                }
+              ]
+            },
+          });
+          const response = await ecsClient.send(runTaskCommand);
+          console.log("ECS Task started:", response.tasks?.[0].taskArn);
+        }
+        catch (error) {
+          console.error("Error in transcoding video:", error);
 
-              }
-            ]
-          },
-        });
-        const response = await ecsClient.send(runTaskCommand);
-        console.log("ECS Task started:", response.tasks?.[0].taskArn);
+        }
+
 
         const videoData = insertVideo({
           //TODO: make dynmaic after auth-flow

@@ -45,8 +45,14 @@ variable "ecs_cluster_name" {
     default     = "video-transcoding-cluster"
 }
 
-variable "ecs_iam_task_role" {
+variable "ecs_task_execution_role" {
     description = "ECS role for task execution for video transcoding"
     type        = string
     default     = "video-transcoding-ecsTaskExecutionRole"
+}
+
+variable "ecs_task_role" {
+    description = "ECS role for task container to access AWS services"
+    type        = string
+    default     = "video-transcoding-ecsTaskRole"
 }

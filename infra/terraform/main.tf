@@ -41,13 +41,20 @@ resource "aws_ecs_cluster" "video_transcoding_cluster" {
   name = var.ecs_cluster_name
 }
 
+
+# 1. The task execution role is responsible for having access to the container in ECR and giving access to run the task itself,
+# 2. The task role is responsible for your docker container making API requests to other authorized AWS services.
+
 # IAM Role for ECS Task Execution
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = var.ecs_iam_task_role
+  name = var.ecs_task_execution_role
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      /* ECS tasks must “assume” an IAM role at runtime to get temporary credentials, 
+      and AWS requires explicit permission for that via sts:AssumeRole.
+      */
       {
         Effect = "Allow"
         Principal = {
@@ -59,10 +66,71 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
+/**
+  assume_role_policy = WHO can use the role
+  policy = WHAT the role is allowed to do
+**/
+
+resource "aws_iam_role" "ecs_task_role" {
+  name = var.ecs_task_role
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      /* ECS tasks must “assume” an IAM role at runtime to get temporary credentials, 
+      and AWS requires explicit permission for that via sts:AssumeRole.
+      */
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "ecs_s3_policy" {
+  name = "video-transcoder-s3-access"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "ReadRawBucket"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
+        Resource = "${aws_s3_bucket.raw_bucket.arn}/*"
+      },
+      {
+        Sid      = "ListRawBucket"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = "${aws_s3_bucket.raw_bucket.arn}"
+      },
+      {
+        Sid      = "WriteProcessedBucket"
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
+        Resource = "${aws_s3_bucket.processed_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
+
 # Attach policy to ECS Task Execution Role
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  #  ECS is allowed to pull images, write logs, and inject secrets
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy" # this is AWS-managed service role policy
+}
+
+# Attach policy to ECS Task Role
+resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_s3_policy.arn
 }
 
 # CloudWatch Log Group for ECS
@@ -71,50 +139,6 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
   retention_in_days = 7
 }
 
-# ECS Task Definition
-resource "aws_ecs_task_definition" "video_transcoder_task" {
-  family                   = "video-transcoder-task"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "1024"
-  memory                   = "2048"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "transcoder"
-      image     = "${aws_ecr_repository.video_transcoder_repository.repository_url}:latest"
-      essential = true
-      environment = [
-        {
-          name  = "INPUT_BUCKET"
-          value = var.raw_bucket_name
-        },
-        {
-          name  = "OUTPUT_BUCKET"
-          value = var.processed_bucket_name
-        },
-        {
-          name  = "AWS_REGION"
-          value = var.region
-        },
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs_log_group.name
-          "awslogs-region"        = var.region
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
-    }
-  ])
-
-  depends_on = [
-    aws_cloudwatch_log_group.ecs_log_group,
-    aws_iam_role_policy_attachment.ecs_task_execution_role_policy
-  ]
-}
 
 # SQS Queue
 resource "aws_sqs_queue" "video_upload_events" {
@@ -164,19 +188,20 @@ resource "aws_ecs_task_definition" "video_transcoder_task" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "1024"
   memory                   = "2048"
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   # runtime_platform {
   #   operating_system_family = "LINUX"
   #   cpu_architecture        = "X86_64"
   # }
-  
+
   container_definitions = jsonencode([
     {
       name      = "transcoder"
       image     = "${aws_ecr_repository.video_transcoder_repository.repository_url}:latest"
       essential = true
-      
+
       environment = [
         {
           name  = "INPUT_BUCKET"
@@ -186,8 +211,12 @@ resource "aws_ecs_task_definition" "video_transcoder_task" {
           name  = "OUTPUT_BUCKET"
           value = aws_s3_bucket.processed_bucket.id
         },
+        {
+          name  = "AWS_REGION"
+          value = var.region
+        },
       ]
-      
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -244,10 +273,5 @@ output "sqs_queue_url" {
 output "sqs_queue_arn" {
   description = "ARN of the SQS queue"
   value       = aws_sqs_queue.video_upload_events.arn
-}
-
-output "ecs_task_definition_arn" {
-  description = "ARN of the ECS task definition"
-  value       = aws_ecs_task_definition.video_transcoder_task.arn
 }
 
