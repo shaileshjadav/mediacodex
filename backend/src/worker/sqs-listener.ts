@@ -4,15 +4,24 @@ import {
   DeleteMessageCommand,
 } from "@aws-sdk/client-sqs";
 import type { S3Event } from "aws-lambda";
+import { ECSClient, RunTaskCommand } from "@aws-sdk/client-ecs";
 
-import { transcodeVideo } from "./dockerode";
+// import { transcodeVideo } from "./dockerode";
 import { insertVideo } from "../api/services/video.service";
 
 const config: {
   region: string;
+  credentials?: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
   endpoint?: string;
 } = {
   region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 };
 const isLocalstack = process.env.AWS_ENDPOINT_MODE === "localstack";
 
@@ -21,6 +30,7 @@ if (isLocalstack) {
 }
 
 const client = new SQSClient(config);
+const ecsClient = new ECSClient(config);
 
 const extractIdFromPath = (path: string) => {
   const fileName = path.split("/").pop() || "";
@@ -56,7 +66,15 @@ export async function init() {
 
       if ("Service" in event && "Event" in event) {
         // ignore the test event
-        if (event.Event === "s3:TestEvent") continue;
+        if (event.Event === "s3:TestEvent") {
+          // Delete message from queue
+          await client.send(new DeleteMessageCommand({
+            QueueUrl: process.env.AWS_SQS_URL,
+            ReceiptHandle: message.ReceiptHandle,
+          }))
+          console.log("Ignored test event");
+          continue;
+        };
       }
 
       for (const record of event.Records) {
@@ -79,7 +97,57 @@ export async function init() {
 
         const videoId = extractIdFromPath(key);
         // Spin container
-        await transcodeVideo(key, rawBucket, processedBucket, awsRegion);
+        // await transcodeVideo(key, rawBucket, processedBucket, awsRegion);
+        try {
+          // Run ECS Task
+          const runTaskCommand = new RunTaskCommand({
+            cluster: process.env.ECS_CLUSTER_ARN,
+            launchType: "FARGATE",
+            taskDefinition: process.env.ECS_TASK_ARN,
+            count: 1,
+            platformVersion: "LATEST",
+            networkConfiguration: {
+              awsvpcConfiguration: {
+                subnets: process.env.ECS_TASK_SUBNETS?.split(","),
+                securityGroups: [process.env.ECS_SECURITY_GROUP || ''],
+                assignPublicIp: "ENABLED",
+              },
+            },
+            overrides: {
+              containerOverrides: [
+                {
+                  name: process.env.ECR_CONTAINER_NAME,
+                  environment: [
+                    {
+                      name: "AWS_REGION",
+                      value: process.env.AWS_REGION,
+                    },
+                    { 
+                      name: "INPUT_BUCKET",
+                      value: process.env.AWS_RAW_BUCKET,
+                    },
+                    { 
+                      name: "OUTPUT_BUCKET",
+                      value: process.env.AWS_PROCESSED_BUCKET,
+                    },
+                    { 
+                      name: "FILE_NAME",
+                      value: key,
+                    },
+                  ],
+
+                }
+              ]
+            },
+          });
+          const response = await ecsClient.send(runTaskCommand);
+          console.log("ECS Task started:", response.tasks?.[0].taskArn);
+        }
+        catch (error) {
+          console.error("Error in transcoding video:", error);
+
+        }
+
 
         const videoData = insertVideo({
           //TODO: make dynmaic after auth-flow
