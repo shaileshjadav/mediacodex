@@ -10,8 +10,7 @@ const path = require("node:path");
 const originalFilePath = process.env.FILE_NAME;
 const inputBucket = process.env.INPUT_BUCKET;
 const outputBucket = process.env.OUTPUT_BUCKET;
-
-const outputBasePath = 'transcoded-videos';
+const outputBasePath = process.env.VIDEO_ID;
 const segmentTime = 10;
 const codecVideo = 'libx264';
 const codecAudio = 'aac';

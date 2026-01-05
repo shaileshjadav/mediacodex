@@ -134,6 +134,10 @@ export async function init() {
                       name: "FILE_NAME",
                       value: key,
                     },
+                    { 
+                      name: "VIDEO_ID",
+                      value: videoId,
+                    },
                   ],
 
                 }
