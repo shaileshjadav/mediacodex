@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci 
+RUN npm install 
+RUN npm -g install typescript dbmate
 
 # Copy source code
 COPY . .
