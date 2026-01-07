@@ -4,16 +4,18 @@ import cors from "cors";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-
 import { init } from "./worker/sqs-listener";
-import {pool} from "./config/db";
+import { pool } from "./config/db";
 import router from "./api/routes";
 import errorHandlerMiddleware from "./api/middleware/errorHandler";
+import {clerkMiddleware} from "@clerk/express";
+import {clerkConfig} from "./config/clerk";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-if(process.env.ENVIRONMENT==='dev'){
+
+if (process.env.ENVIRONMENT === "dev") {
   app.use(cors());
 }
 
@@ -21,11 +23,15 @@ if(process.env.ENVIRONMENT==='dev'){
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.get("/health", (req: Request, res: Response) => {
   res.send("Hello from Express with TypeScript!");
 });
 
-app.use('/api', router);
+// Clerk middleware
+app.use(clerkMiddleware(clerkConfig));
+
+app.use("/api", router);
 
 // error handler middleware
 app.use(errorHandlerMiddleware);
