@@ -8,12 +8,14 @@ const authMiddleware = (
   next: NextFunction
 ) => {
     const { isAuthenticated, userId } = getAuth(req);
-    if(!isAuthenticated){
+    
+    if(!isAuthenticated || !userId){
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
             success:false,
             message:"Unauthorized",
         })
     }
+    req.userId = userId;
     next();
 };
 
