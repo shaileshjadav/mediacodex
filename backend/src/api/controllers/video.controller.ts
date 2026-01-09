@@ -13,10 +13,11 @@ export const getUploadUrl = async (
   res: Response<GetUploadUrlResponse>,
 ): Promise<void> => {
   const { fileName, contentType } = req.body;
-
+  const {userId} = req;
   const { uploadUrl, key } = await videoService.getUploadUrl(
     fileName,
     contentType,
+    userId,
   );
   res.status(200).json({
     uploadUrl,

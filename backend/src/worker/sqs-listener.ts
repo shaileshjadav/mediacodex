@@ -94,8 +94,8 @@ export async function init() {
 
         const awsRegion = process.env.AWS_REGION;
         if (!awsRegion) throw new Error("AWS_REGION env var is required");
-
-        const videoId = extractIdFromPath(key);
+        const [userId, fileName] = key.split('/');
+        const videoId = fileName.split(".")[0];
         // Spin container
         // await transcodeVideo(key, rawBucket, processedBucket, awsRegion);
         try {
@@ -154,8 +154,7 @@ export async function init() {
 
 
         const videoData = insertVideo({
-          //TODO: make dynmaic after auth-flow
-          userId: "1",
+          userId: userId,
           videoId,
           status: "PROCESSING",
         });

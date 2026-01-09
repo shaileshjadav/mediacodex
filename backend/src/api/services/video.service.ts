@@ -14,8 +14,9 @@ import { AWS_PROCESSED_BUCKET, RESOLUTION_MAP } from "../../config/constants";
 export const getUploadUrl = async (
   fileName: string,
   contentType: string,
+  userId:string,
 ): Promise<{ uploadUrl: string; key: string }> => {
-  const key = generateUniqueS3Key(fileName, "uploads");
+  const key = generateUniqueS3Key(fileName, userId);
 
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_RAW_BUCKET!,

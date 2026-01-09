@@ -3,12 +3,13 @@ import type {
   VideoUploadUrlResponse,
 } from '../types/video';
 import type { Video } from '../types';
-import axios from '../utils/axios';
+import api from '../utils/axios';
+import axios from 'axios';
 
 export const getVideoUploadUrl = async (
   data: VideoUploadUrlRequest
 ): Promise<VideoUploadUrlResponse> => {
-  const response = await axios.post(
+  const response = await api.post(
     `${import.meta.env.VITE_API_BASE_URL}/videos/upload-url`,
     data
   );
@@ -16,7 +17,7 @@ export const getVideoUploadUrl = async (
 };
 
 export const getVideoList = async (): Promise<Video[]> => {
-  const response = await axios.get(
+  const response = await api.get(
     `${import.meta.env.VITE_API_BASE_URL}/videos`
   );
   return response.data;
@@ -31,7 +32,7 @@ export const generateEmbedCode = async (
   embedCode: string;
   expiresIn: number;
 }> => {
-  const response = await axios.post(
+  const response = await api.post(
     `${import.meta.env.VITE_API_BASE_URL}/videos/${videoId}/embed`,
     {
       domain,
@@ -47,7 +48,7 @@ export const createPlayerSession = async (
   playbackUrl: string;
   expiresIn: number;
 }> => {
-  const response = await axios.post(
+  const response = await api.post(
     `${import.meta.env.VITE_API_BASE_URL}/player/session`,
     {
       videoId,
@@ -61,7 +62,7 @@ export const getVideoPresignedUrl = async (
   videoId: string,
   quality: string
 ): Promise<any> => {
-  const response = await axios.post(
+  const response = await api.post(
     `${import.meta.env.VITE_API_BASE_URL}/videos/presigned-url`,
     {
       videoId,
@@ -76,6 +77,7 @@ export const uploadOnObjectStore = (
   uploadData: any,
   onProgress: (p: number) => void
 ): Promise<any> => {
+  // used axois for direct upload on object store server.
   return axios.put(uploadUrl, uploadData, {
     onUploadProgress: (e) => {
       onProgress(Math.round((e.loaded * 100) / e.total!));

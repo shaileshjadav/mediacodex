@@ -1,13 +1,19 @@
 import axios from 'axios';
+import {Clerk} from "@clerk/clerk-js";
 
 // Create axios instance
 const axiosInstance = axios.create();
 
+// Initialize Clerk instance if needed outside of React components
+// TODO: Remove clerk-js and use react-clerk for get token
+const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY); 
+await clerk.load();
+
 // Request interceptor
 axiosInstance.interceptors.request.use(
-  (config) => {
+  async(config) => {
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
+    const token = await clerk.session?.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,7 +37,7 @@ axiosInstance.interceptors.response.use(
     // Handle common errors
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login
-      localStorage.removeItem('authToken');
+      // localStorage.removeItem('authToken');
       window.location.href = '/login';
     }
     

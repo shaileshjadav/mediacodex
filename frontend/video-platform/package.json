@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^5.117.0",
     "@clerk/clerk-react": "^5.58.1",
     "@heroicons/react": "^2.2.0",
     "@types/react-router-dom": "^5.3.3",
