@@ -33,6 +33,7 @@
     "dev:ts": "npx ts-node ./src/index.ts",
     "migrate:new": "dbmate new",
     "migrate:up": "dbmate up",
+    "migrate:down": "dbmate down",
     "clean": "rm -rf dist"
   }
 }
