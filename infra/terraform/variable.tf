@@ -56,3 +56,15 @@ variable "ecs_task_role" {
     type        = string
     default     = "video-transcoding-ecsTaskRole"
 }
+
+variable "cloudfront_distribution_comment" {
+    description = "Comment for CloudFront distribution"
+    type        = string
+    default     = "HLS Video Streaming Distribution"
+}
+
+variable "cloudfront_price_class" {
+    description = "CloudFront price class"
+    type        = string
+    default     = "PriceClass_100"
+}
