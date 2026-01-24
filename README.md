@@ -70,5 +70,10 @@ You should see the S3 event printed in the console.
 
 ---
 
+
+openssl genrsa -out certs/cloudfront_private_key.pem 2048
+
+openssl rsa -pubout -in certs/cloudfront_private_key.pem -out certs/cloudfront_public_key.pem
+
 ## 📃 License
 MIT

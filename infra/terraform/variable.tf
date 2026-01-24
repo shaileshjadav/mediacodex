@@ -68,3 +68,9 @@ variable "cloudfront_price_class" {
     type        = string
     default     = "PriceClass_100"
 }
+
+variable "cloudfront_public_key_path" {
+    description = "Path to CloudFront public key file"
+    type        = string
+    default     = "./certs/cloudfront_public_key.pem"
+}

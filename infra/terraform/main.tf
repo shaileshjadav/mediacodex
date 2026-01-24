@@ -275,7 +275,17 @@ output "sqs_queue_arn" {
   value       = aws_sqs_queue.video_upload_events.arn
 }
 
-# CloudFront Origin Access Control for S3
+# Block public access to processed bucket (CloudFront will access via OAC)
+resource "aws_s3_bucket_public_access_block" "processed_bucket_public_access_block" {
+  bucket = aws_s3_bucket.processed_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# CloudFront Origin Access Control for S3 for restricts bucket access to only CloudFront
 resource "aws_cloudfront_origin_access_control" "processed_bucket_oac" {
   name                              = "processed-bucket-oac"
   description                       = "Origin Access Control for processed videos bucket"
@@ -283,6 +293,24 @@ resource "aws_cloudfront_origin_access_control" "processed_bucket_oac" {
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
+
+
+# CloudFront Public Key (for signed URLs)
+resource "aws_cloudfront_public_key" "hls_public_key" {
+  count       = 1
+  name        = "hls-streaming-public-key"
+  encoded_key = file(var.cloudfront_public_key_path)
+  comment     = "Public key for HLS streaming signed URLs"
+}
+
+# CloudFront Key Group
+resource "aws_cloudfront_key_group" "hls_key_group" {
+  count   = 1
+  name    = "hls-streaming-key-group"
+  comment = "Key group for HLS streaming signed URLs"
+  items   = [aws_cloudfront_public_key.hls_public_key[0].id]
+}
+
 
 # CloudFront Distribution for HLS Streaming
 resource "aws_cloudfront_distribution" "hls_distribution" {
@@ -317,6 +345,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     default_ttl            = 3600
     max_ttl                = 86400
     compress               = true
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
   }
 
   # Specific cache behavior for .m3u8 files (shorter TTL for playlist updates)
@@ -340,6 +371,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     max_ttl                = 60
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
   }
 
   # Cache behavior for .ts segments (longer TTL as they don't change)
@@ -363,6 +397,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     max_ttl                = 31536000
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
   }
 
   price_class = var.cloudfront_price_class

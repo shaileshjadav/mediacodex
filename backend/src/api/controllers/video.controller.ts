@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import {
   GetUploadUrlRequestBody,
   GetUploadUrlResponse,
@@ -7,6 +7,8 @@ import {
 } from "../../types/video.types";
 import * as videoService from "../services/video.service";
 import { generateEmbedToken } from "../../utils/jwt";
+import { CLOUDFRONT_DOMAIN_NAME } from "../../config/constants";
+import { CloudfrontSignedCookiesOutput } from "@aws-sdk/cloudfront-signer";
 
 export const getUploadUrl = async (
   req: Request<{}, {}, GetUploadUrlRequestBody>,
@@ -35,13 +37,32 @@ export const getVideoList = async (
 
 export const getPresignedUrl = async (
   req: Request<{}, {}, GetPresigneUrlRequestBody>,
-  res: Response<{ url: string }>,
+  res: Response<{ message: string }>,
 ): Promise<void> => {
-  const presignedUrl = await videoService.getPresignedUrl(
+  const cookies: CloudfrontSignedCookiesOutput = await videoService.getPresignedUrl(
     req.body.videoId,
     req.body.quality,
   );
-  res.status(200).json({ url: presignedUrl });
+  if(!cookies){
+    throw new Error("Could not generate signed cookies");
+  }
+  if(!CLOUDFRONT_DOMAIN_NAME){
+    throw new Error("CloudFront domain name is not configured");
+  }
+  const cookieOptions:CookieOptions = {
+    httpOnly: true,
+    // secure: true,       // MUST be true in production (HTTPS)
+    sameSite: "none",   // REQUIRED if frontend & CF are on different domains
+    path: "/",
+    domain: CLOUDFRONT_DOMAIN_NAME.replace('https://', '') // must match CloudFront domain or parent
+  };
+
+  res
+  .cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOptions)
+  .cookie("CloudFront-Signature", cookies["CloudFront-Signature"], cookieOptions)
+  .cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], cookieOptions)
+  .status(200)
+  .json({ message: "Signed cookies set" });
 };
 export const generateEmbedCode = async (
   req: Request<{ videoId: string }, {}, { domain?: string }>,
