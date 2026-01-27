@@ -2,8 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
-  VideoCameraIcon,
-  CloudArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -18,22 +16,10 @@ export const Sidebar: React.FC = () => {
 
   const navigation: SidebarItem[] = [
     {
-      name: 'Dashboard',
+      name: 'Home',
       href: '/dashboard',
       icon: HomeIcon,
       current: location.pathname === '/dashboard',
-    },
-    {
-      name: 'My Videos',
-      href: '/dashboard',
-      icon: VideoCameraIcon,
-      current: location.pathname === '/dashboard',
-    },
-    {
-      name: 'Upload',
-      href: '/upload',
-      icon: CloudArrowUpIcon,
-      current: location.pathname === '/upload',
     },
   ];
 

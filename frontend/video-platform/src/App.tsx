@@ -62,7 +62,7 @@ function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Videos</h1>
-          <p className="text-gray-600">Manage and share your video content</p>
+          <p className="text-gray-600">Manage your videos</p>
         </div>
         <button
           className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -127,22 +127,8 @@ function AppContent() {
                 path="/"
                 element={<LandingPage />}
               />
-              {/* Placeholder routes for future implementation */}
+              {/* Home/Dashboard route */}
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route
-                path="/upload"
-                element={
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                      Upload Video
-                    </h2>
-                    <p className="text-gray-600">
-                      Upload functionality coming soon...
-                    </p>
-                  </div>
-                }
-              />
-              
             </Routes>
           </LayoutWrapper>
         }
