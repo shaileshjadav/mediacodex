@@ -4,8 +4,6 @@ import {
   HomeIcon,
   VideoCameraIcon,
   CloudArrowUpIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -27,27 +25,15 @@ export const Sidebar: React.FC = () => {
     },
     {
       name: 'My Videos',
-      href: '/dashboard/videos',
+      href: '/dashboard',
       icon: VideoCameraIcon,
-      current: location.pathname.startsWith('/dashboard/videos'),
+      current: location.pathname === '/dashboard',
     },
     {
       name: 'Upload',
       href: '/upload',
       icon: CloudArrowUpIcon,
       current: location.pathname === '/upload',
-    },
-    {
-      name: 'Analytics',
-      href: '/dashboard/analytics',
-      icon: ChartBarIcon,
-      current: location.pathname === '/dashboard/analytics',
-    },
-    {
-      name: 'Settings',
-      href: '/dashboard/settings',
-      icon: Cog6ToothIcon,
-      current: location.pathname === '/dashboard/settings',
     },
   ];
 
@@ -84,25 +70,6 @@ export const Sidebar: React.FC = () => {
               );
             })}
           </nav>
-        </div>
-        
-        {/* Quick stats or info section */}
-        <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Quick Stats
-            </h3>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Videos</span>
-                <span className="font-medium text-gray-900">-</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Storage</span>
-                <span className="font-medium text-gray-900">-</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

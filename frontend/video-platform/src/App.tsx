@@ -1,12 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { VideoProvider } from './contexts/VideoContext';
-import { useAuth } from './hooks/useAuth';
 import { useVideos } from './hooks/useVideo';
 import {
   LayoutWrapper,
   UploadModal,
-  StatusPage,
   VideoListContainer,
   VideoPlayerModal,
   EmbedModal,
@@ -114,8 +112,6 @@ function DashboardPage() {
 }
 
 function AppContent() {
-  const { isSignedIn } = useAuth();
-
   return (
     <Routes>
       {/* Embed route - standalone page without layout */}
@@ -146,7 +142,7 @@ function AppContent() {
                   </div>
                 }
               />
-              <Route path="/status/:videoId" element={<StatusPage />} />
+              
             </Routes>
           </LayoutWrapper>
         }

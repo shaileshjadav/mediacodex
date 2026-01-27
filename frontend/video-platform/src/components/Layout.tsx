@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -10,13 +9,9 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
-  const location = useLocation();
 
   // Determine if we should show the sidebar based on route and auth status
-  const shouldShowSidebar = isSignedIn && isLoaded && 
-    (location.pathname.startsWith('/dashboard') || 
-     location.pathname.startsWith('/upload') ||
-     location.pathname.startsWith('/status'));
+  const shouldShowSidebar = isSignedIn && isLoaded;
 
   if (!isLoaded) {
     return (
@@ -73,12 +68,6 @@ export const FullWidthLayout: React.FC<LayoutProps> = ({ children }) => {
 
 // Layout wrapper that chooses the appropriate layout based on route
 export const LayoutWrapper: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
-  
-  // Use full-width layout for status pages
-  if (location.pathname.startsWith('/status/')) {
-    return <FullWidthLayout>{children}</FullWidthLayout>;
-  }
   
   // Use default layout for everything else
   return <Layout>{children}</Layout>;
