@@ -10,6 +10,9 @@ import {
 } from "../../types/video.types";
 import * as videoDal from "../dataAccess/video";
 import { AWS_PROCESSED_BUCKET, RESOLUTION_MAP } from "../../config/constants";
+import * as fs from 'fs';
+import { CloudfrontSignedCookiesOutput, getSignedCookies } from "@aws-sdk/cloudfront-signer";
+import {CLOUDFRONT_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY_PATH, CLOUDFRONT_KEY_PAIR_ID } from "../../config/constants";
 
 export const getUploadUrl = async (
   fileName: string,
@@ -110,7 +113,8 @@ async function getVideoPresignedUrl(
   bucket: string,
   videoId: string,
   quality: string,
-): Promise<string | null> {
+): Promise<CloudfrontSignedCookiesOutput | null> {
+
   // Find the resolution key that matches the quality label
   const resolutionEntry = Object.entries(RESOLUTION_MAP).find(([, value]) => {
     return value === quality;
@@ -121,28 +125,21 @@ async function getVideoPresignedUrl(
   }
 
   const [resolution] = resolutionEntry;
-  const fullPrefix = `${videoId}/${resolution}/`;
 
-  const command = new ListObjectsV2Command({
-    Bucket: bucket,
-    Prefix: fullPrefix,
-  });
-
-  const response = await s3Client.send(command);
-
-  if (!response.Contents) return null;
-
-  for (const object of response.Contents) {
-    const key = object.Key;
-    if (!key || !key.endsWith("playlist.m3u8")) continue;
-
-    // Join with aws bucket full link
-    const s3Endpoint = process.env.AWS_ENDPOINT_URL;
-    const fullUrl = `${s3Endpoint}/${bucket}/${key}`;
-    return fullUrl;
+  if(!CLOUDFRONT_PRIVATE_KEY_PATH || !CLOUDFRONT_KEY_PAIR_ID){
+    throw new Error("config error");
   }
-
-  return null;
+  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
+  const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
+  const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
+  const cookies = getSignedCookies({
+      url,
+      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
+      dateLessThan: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      privateKey,
+  });
+  
+  return cookies;
 }
 
 export const getVideoList = async (): Promise<Video[]> => {
@@ -163,7 +160,7 @@ export const getVideoList = async (): Promise<Video[]> => {
 export const getPresignedUrl = async (
   videoId: string,
   quality: string,
-): Promise<string> => {
+): Promise<CloudfrontSignedCookiesOutput> => {
   const videoDetails = await videoDal.getVideoById(videoId);
 
   if (!videoDetails) {

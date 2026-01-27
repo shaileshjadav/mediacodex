@@ -15,3 +15,7 @@ export const RESOLUTION_MAP: Record<string, string> = {
 };
 
 export const AWS_PROCESSED_BUCKET: string|undefined = process.env.AWS_PROCESSED_BUCKET;
+
+export const CLOUDFRONT_DOMAIN_NAME: string|undefined = process.env.CLOUDFRONT_DOMAIN_NAME;
+export const CLOUDFRONT_PRIVATE_KEY_PATH: string|undefined = process.env.CLOUDFRONT_PRIVATE_KEY_PATH;
+export const CLOUDFRONT_KEY_PAIR_ID: string|undefined = process.env.CLOUDFRONT_KEY_PAIR_ID;

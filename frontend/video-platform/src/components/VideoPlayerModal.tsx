@@ -33,9 +33,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   // Available quality options based on processed URLs
   const getQualityOptions = (): QualityOption[] => {
     if (!video?.processedUrls) {
-      return [
-        { label: 'Original', value: 'original', url: video?.originalUrl },
-      ];
+      return [];
     }
 
     const options: QualityOption[] = [];

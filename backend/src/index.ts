@@ -23,6 +23,8 @@ if (process.env.ENVIRONMENT === "dev") {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Static HLS files for local testing
+app.use("/hls", express.static("hls"));
 
 app.get("/health", (req: Request, res: Response) => {
   res.send("Hello from Express with TypeScript!");

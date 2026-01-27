@@ -9,3 +9,8 @@ ecr_repository_name = "video-transcoder-repository"
 ecs_cluster_name = "video-transcoding-cluster"
 ecs_task_execution_role = "video-transcoding-ecsTaskExecutionRole"
 ecs_task_role = "video-transcoding-ecsTaskRole"
+
+# CloudFront Configuration
+cloudfront_distribution_comment = "HLS Video Streaming Distribution"
+cloudfront_price_class = "PriceClass_100"
+cloudfront_public_key_path = "./certs/cloudfront_public_key.pem"

@@ -275,3 +275,194 @@ output "sqs_queue_arn" {
   value       = aws_sqs_queue.video_upload_events.arn
 }
 
+# Block public access to processed bucket (CloudFront will access via OAC)
+resource "aws_s3_bucket_public_access_block" "processed_bucket_public_access_block" {
+  bucket = aws_s3_bucket.processed_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# CloudFront Origin Access Control for S3 for restricts bucket access to only CloudFront
+resource "aws_cloudfront_origin_access_control" "processed_bucket_oac" {
+  name                              = "processed-bucket-oac"
+  description                       = "Origin Access Control for processed videos bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+
+# CloudFront Public Key (for signed URLs)
+resource "aws_cloudfront_public_key" "hls_public_key" {
+  count       = 1
+  name        = "hls-streaming-public-key"
+  encoded_key = file(var.cloudfront_public_key_path)
+  comment     = "Public key for HLS streaming signed URLs"
+}
+
+# CloudFront Key Group
+resource "aws_cloudfront_key_group" "hls_key_group" {
+  count   = 1
+  name    = "hls-streaming-key-group"
+  comment = "Key group for HLS streaming signed URLs"
+  items   = [aws_cloudfront_public_key.hls_public_key[0].id]
+}
+
+
+# CloudFront Distribution for HLS Streaming
+resource "aws_cloudfront_distribution" "hls_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.processed_bucket.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.processed_bucket_oac.id
+    origin_id                = "S3-${aws_s3_bucket.processed_bucket.id}"
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = var.cloudfront_distribution_comment
+  default_root_object = "index.html"
+
+  # Cache behavior for HLS files (.m3u8 and .ts)
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+    compress               = true
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+  }
+
+  # Specific cache behavior for .m3u8 files (shorter TTL for playlist updates)
+  ordered_cache_behavior {
+    path_pattern     = "*.m3u8"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 5
+    max_ttl                = 60
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+  }
+
+  # Cache behavior for .ts segments (longer TTL as they don't change)
+  ordered_cache_behavior {
+    path_pattern     = "*.ts"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Enable signed URLs if key group is created
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+  }
+
+  price_class = var.cloudfront_price_class
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tags = {
+    Name        = "HLS-Streaming-Distribution"
+    Environment = "production"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+# S3 Bucket Policy to allow CloudFront OAC access
+resource "aws_s3_bucket_policy" "processed_bucket_policy" {
+  bucket = aws_s3_bucket.processed_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontServicePrincipal"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.processed_bucket.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.hls_distribution.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Additional CloudFront outputs
+output "cloudfront_distribution_id" {
+  description = "ID of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.hls_distribution.id
+}
+
+output "cloudfront_distribution_arn" {
+  description = "ARN of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.hls_distribution.arn
+}
+
+output "cloudfront_domain_name" {
+  description = "Domain name of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.hls_distribution.domain_name
+}
+
+output "cloudfront_hosted_zone_id" {
+  description = "CloudFront Route 53 zone ID"
+  value       = aws_cloudfront_distribution.hls_distribution.hosted_zone_id
+}
+
