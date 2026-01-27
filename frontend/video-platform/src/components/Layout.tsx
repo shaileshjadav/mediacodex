@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
@@ -9,9 +10,11 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
+  const location = useLocation();
 
   // Determine if we should show the sidebar based on route and auth status
-  const shouldShowSidebar = isSignedIn && isLoaded;
+  // Only show sidebar on dashboard routes, not on landing page
+  const shouldShowSidebar = isSignedIn && isLoaded && location.pathname !== '/';
 
   if (!isLoaded) {
     return (
@@ -28,7 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="flex">
+      <div className="flex pt-16">
         {shouldShowSidebar && <Sidebar />}
         
         <main className={`flex-1 ${shouldShowSidebar ? 'ml-0 lg:ml-64' : ''}`}>
@@ -59,7 +62,7 @@ export const FullWidthLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="w-full">
+      <main className="w-full pt-16">
         {children}
       </main>
     </div>
