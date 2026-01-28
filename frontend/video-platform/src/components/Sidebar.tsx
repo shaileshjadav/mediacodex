@@ -2,10 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
-  VideoCameraIcon,
-  CloudArrowUpIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -20,39 +16,15 @@ export const Sidebar: React.FC = () => {
 
   const navigation: SidebarItem[] = [
     {
-      name: 'Dashboard',
+      name: 'Home',
       href: '/dashboard',
       icon: HomeIcon,
       current: location.pathname === '/dashboard',
     },
-    {
-      name: 'My Videos',
-      href: '/dashboard/videos',
-      icon: VideoCameraIcon,
-      current: location.pathname.startsWith('/dashboard/videos'),
-    },
-    {
-      name: 'Upload',
-      href: '/upload',
-      icon: CloudArrowUpIcon,
-      current: location.pathname === '/upload',
-    },
-    {
-      name: 'Analytics',
-      href: '/dashboard/analytics',
-      icon: ChartBarIcon,
-      current: location.pathname === '/dashboard/analytics',
-    },
-    {
-      name: 'Settings',
-      href: '/dashboard/settings',
-      icon: Cog6ToothIcon,
-      current: location.pathname === '/dashboard/settings',
-    },
   ];
 
   return (
-    <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:pt-16">
+    <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:pt-16 z-40">
       <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
         <div className="flex items-center flex-shrink-0 px-4">
           <h2 className="text-lg font-medium text-gray-900">Navigation</h2>
@@ -84,25 +56,6 @@ export const Sidebar: React.FC = () => {
               );
             })}
           </nav>
-        </div>
-        
-        {/* Quick stats or info section */}
-        <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Quick Stats
-            </h3>
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Videos</span>
-                <span className="font-medium text-gray-900">-</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Storage</span>
-                <span className="font-medium text-gray-900">-</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

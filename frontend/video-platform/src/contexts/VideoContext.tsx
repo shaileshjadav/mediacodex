@@ -5,6 +5,7 @@ import type { Video } from "../types";
 type VideoContextType = {
   videos: Video[];
   loading: boolean;
+  isInitialLoading: boolean;
   error: string | null;
   refresh: () => void;
 
@@ -18,15 +19,25 @@ export const VideoContext = createContext<VideoContextType | null>(null);
 export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Video|null>(null);
 
-  const loadVideos = async () => {
+  const loadVideos = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not on refresh
+      if (!isRefresh) {
+        setLoading(true);
+      }
+      
       const data = await getVideoList();
-
       setVideos(data);
+      setError(null);
+      
+      // Mark initial loading as complete
+      if (isInitialLoading) {
+        setIsInitialLoading(false);
+      }
     } catch (e: any) {
       setError(e.message || "Failed to fetch videos");
     } finally {
@@ -34,10 +45,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const refreshVideos = () => {
+    loadVideos(true); // Pass true to indicate this is a refresh
+  };
+
   //  auto refresh every 30 seconds
   useEffect(() => {
-    loadVideos();
-    const interval = setInterval(loadVideos, 30000);
+    loadVideos(); // Initial load
+    const interval = setInterval(() => loadVideos(true), 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -46,8 +61,9 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         videos,
         loading,
+        isInitialLoading,
         error,
-        refresh: loadVideos,
+        refresh: refreshVideos,
         selectedVideo,
         selectVideo: setSelectedVideo,
         clearSelectedVideo: () => setSelectedVideo(null),

@@ -36,9 +36,12 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // Handle common errors
     if (error.response?.status === 401) {
-      // Unauthorized - redirect to login
-      // localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      // Unauthorized - redirect to login only if not already on login page
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/') {
+        // localStorage.removeItem('authToken');
+        window.location.href = '/';
+      }
     }
     
     if (error.response?.status === 500) {

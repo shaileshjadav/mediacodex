@@ -7,4 +7,5 @@ export { default as VideoCard } from './VideoCard';
 export { UploadModal } from './UploadModal';
 export { VideoPlayerModal } from './VideoPlayerModal';
 export { EmbedModal } from './EmbedModal';
-export { default as StatusPage } from './StatusPage';
+export { default as LandingPage } from './LandingPage';
+export { default as DemoVideo } from './DemoVideo';

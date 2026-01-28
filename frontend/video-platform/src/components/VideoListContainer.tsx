@@ -11,7 +11,7 @@ const VideoListContainer: React.FC<VideoListContainerProps> = ({
   onVideoSelect,
   onEmbedClick,
 }) => {
- const { videos, loading, error, refresh } = useVideos();
+ const { videos, isInitialLoading, error, refresh } = useVideos();
   
 
   if (error) {
@@ -42,7 +42,7 @@ const VideoListContainer: React.FC<VideoListContainerProps> = ({
   return (
     <VideoList
       videos={videos}
-      loading={loading}
+      loading={isInitialLoading}
       onVideoSelect={onVideoSelect}
       onEmbedClick={onEmbedClick}
     />
