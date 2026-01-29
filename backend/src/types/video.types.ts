@@ -1,3 +1,5 @@
+import { CloudfrontSignedCookiesOutput } from "@aws-sdk/cloudfront-signer";
+
 /**
  * Request body for generating S3 pre-signed upload URL
  */
@@ -89,4 +91,9 @@ export interface VideoList {
   // total: number;
   // page: number;
   // limit: number;
+}
+
+export interface GetPresigneUrlResponse {
+  url:string,
+  cookies: CloudfrontSignedCookiesOutput
 }

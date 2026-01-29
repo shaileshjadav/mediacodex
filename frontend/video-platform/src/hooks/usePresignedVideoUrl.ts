@@ -13,7 +13,6 @@ export function usePresignedVideoUrl(videoId?: string, quality?: string) {
     const fetchUrl = async () => {
       setLoading(true);
       const res = await getVideoPresignedUrl(videoId, quality);
-
       if (!cancelled) {
         setUrl(res.url);
         setLoading(false);

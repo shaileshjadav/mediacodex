@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             )}
             
             <Link
-              to="/"
+              to="/dashboard"
               className="flex items-center space-x-2 text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors"
             >
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">

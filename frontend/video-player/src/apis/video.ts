@@ -22,7 +22,7 @@ export const getVideoPresignedUrl = async (
   quality: string
 ): Promise<any> => {
   const response = await axios.post(
-    `${import.meta.env.VITE_API_BASE_URL}/videos/presigned-url`,
+    `${import.meta.env.VITE_API_BASE_URL}/player/presigned-url`,
     {
       videoId,
       quality,

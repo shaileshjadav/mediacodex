@@ -114,7 +114,7 @@ const EmbedPage: React.FC = () => {
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Expired or invalid token</li>
               <li>Video not found</li>
-              <li>Domain not authorized</li>
+              {/* <li>Domain not authorized</li> */}
             </ul>
           </div>
         </div>

@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { createPlayerSession } from "../controllers/player.controller";
+import { getPresignedUrlSchema } from "../validation/video"
+import {
+  getPresignedUrl,
+} from "../controllers/video.controller";
 import { validate } from "../middleware/validation";
 import { z } from "zod";
 
@@ -16,6 +20,12 @@ router.post(
   "/session",
   validate({ body: playerSessionSchema }),
   createPlayerSession,
+);
+
+router.post(
+  "/presigned-url",
+  validate({ body: getPresignedUrlSchema }),
+  getPresignedUrl,
 );
 
 export default router;

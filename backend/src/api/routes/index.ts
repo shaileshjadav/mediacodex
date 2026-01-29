@@ -5,11 +5,12 @@ import authMiddleware from "../middleware/auth";
 
 const router = Router();
 
+router.use("/player", playerRouter);
 
 router.use(authMiddleware);
 
 // protected routes
 router.use("/videos", videoRouter);
-router.use("/player", playerRouter);
+
 
 export default router;
