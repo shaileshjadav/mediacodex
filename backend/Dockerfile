@@ -1,5 +1,5 @@
-# Use Node.js 18 Alpine for smaller image size
-FROM node:18-alpine
+# Use Node.js 22 Alpine for smaller image size
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
@@ -23,5 +23,3 @@ RUN npm prune --production && npm cache clean --force
 # Expose port 3000
 EXPOSE 3000
 
-# Run migrations and start the application
-CMD sh -c "npm run migrate:up && npm start"

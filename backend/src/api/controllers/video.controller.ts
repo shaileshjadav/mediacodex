@@ -9,7 +9,6 @@ import {
 import * as videoService from "../services/video.service";
 import { generateEmbedToken } from "../../utils/jwt";
 import { CLOUDFRONT_DOMAIN_NAME } from "../../config/constants";
-import { CloudfrontSignedCookiesOutput } from "@aws-sdk/cloudfront-signer";
 
 export const getUploadUrl = async (
   req: Request<{}, {}, GetUploadUrlRequestBody>,
