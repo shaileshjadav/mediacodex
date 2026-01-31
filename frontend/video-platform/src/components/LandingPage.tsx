@@ -40,12 +40,12 @@ const LandingPage = () => {
     }
   ];
 
-  const stats = [
-    { number: "99.9%", label: "Uptime Guarantee" },
-    { number: "150+", label: "Countries Served" },
-    { number: "<2s", label: "Average Load Time" },
-    { number: "24/7", label: "Support Available" }
-  ];
+  // const stats = [
+  //   { number: "99.9%", label: "Uptime Guarantee" },
+  //   { number: "150+", label: "Countries Served" },
+  //   { number: "<2s", label: "Average Load Time" },
+  //   { number: "24/7", label: "Support Available" }
+  // ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">

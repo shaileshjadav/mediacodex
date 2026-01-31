@@ -1,5 +1,7 @@
 // Core types for the video platform
 
+import type { VIDEO_STATUS } from "../utils/constants";
+
 export interface User {
   id: string;
   clerkId: string;
@@ -31,28 +33,6 @@ export interface Video {
   updatedAt?: Date;
 }
 
-export type VideoStatus =
-  | 'uploading'
-  | 'pending'
-  | 'processing'
-  | 'completed'
-  | 'failed';
+// as const + union type
+export type VideoStatus = typeof VIDEO_STATUS[keyof typeof VIDEO_STATUS];
 
-export interface ProcessingLog {
-  id: string;
-  videoId: string;
-  level: 'info' | 'warn' | 'error';
-  message: string;
-  timestamp: Date;
-  stage: string;
-}
-
-export interface ProcessingStatus {
-  videoId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  currentStage: string;
-  logs: ProcessingLog[];
-  createdAt: Date;
-  updatedAt: Date;
-}

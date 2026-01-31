@@ -30,8 +30,9 @@ const ACCEPTED_VIDEO_TYPES = [
   'video/quicktime'
 ];
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB in bytes
-const MAX_FILES = 5;
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+
+const MAX_FILES = 1;
 
 export const UploadModal: React.FC<UploadModalProps> = ({
   isOpen,
