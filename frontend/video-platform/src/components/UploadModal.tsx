@@ -228,21 +228,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     }
 
     setIsUploading(true);
-
+    let completedFiles = 0;
     try {
       // Upload files sequentially to avoid overwhelming the server
       for (const uploadFile of validFiles) {
         try {
           // await simulateUpload(uploadFile);
           await processFileUpload(uploadFile);
+          completedFiles += 1;
         } catch (error) {
           console.error(`Failed to upload ${uploadFile.file.name}:`, error);
         }
       }
 
       // Check if any uploads completed successfully
-      const completedFiles = uploadFiles.filter(f => f.status === 'completed');
-      if (completedFiles.length > 0) {
+      if (completedFiles > 0) {
         // For demo purposes, use the first completed file's ID
         const videoId = `video-${Date.now()}`;
         onUploadComplete(videoId);
