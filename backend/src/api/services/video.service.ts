@@ -7,12 +7,15 @@ import {
   InsertedVideo,
   Video,
   ProcessedUrls,
+  GetPresigneUrlResponse,
 } from "../../types/video.types";
 import * as videoDal from "../dataAccess/video";
 import { AWS_PROCESSED_BUCKET, RESOLUTION_MAP } from "../../config/constants";
 import * as fs from 'fs';
 import { CloudfrontSignedCookiesOutput, getSignedCookies } from "@aws-sdk/cloudfront-signer";
 import {CLOUDFRONT_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY_PATH, CLOUDFRONT_KEY_PAIR_ID } from "../../config/constants";
+
+
 
 export const getUploadUrl = async (
   fileName: string,
@@ -113,7 +116,7 @@ async function getVideoPresignedUrl(
   bucket: string,
   videoId: string,
   quality: string,
-): Promise<CloudfrontSignedCookiesOutput | null> {
+): Promise<GetPresigneUrlResponse | null> {
 
   // Find the resolution key that matches the quality label
   const resolutionEntry = Object.entries(RESOLUTION_MAP).find(([, value]) => {
@@ -139,7 +142,7 @@ async function getVideoPresignedUrl(
       privateKey,
   });
   
-  return cookies;
+  return { url , cookies};
 }
 
 export const getVideoList = async (): Promise<Video[]> => {
@@ -160,7 +163,7 @@ export const getVideoList = async (): Promise<Video[]> => {
 export const getPresignedUrl = async (
   videoId: string,
   quality: string,
-): Promise<CloudfrontSignedCookiesOutput> => {
+): Promise<GetPresigneUrlResponse> => {
   const videoDetails = await videoDal.getVideoById(videoId);
 
   if (!videoDetails) {

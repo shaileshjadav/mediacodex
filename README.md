@@ -1,38 +1,14 @@
-# 🎥 Video Transcoding Pipeline (LocalStack + Node.js) — Minimal Setup
+# Mediacodex
 
-This is a minimal demo project that shows how to trigger an SQS message whenever a video is uploaded to an S3 bucket in **LocalStack**.  
-It simulates the event-driven pipeline used in cloud-based video processing systems.
+
 
 ---
 
 ## 🧱 Tech Stack
-- LocalStack (S3 + SQS)
+- AWS (S3 + SQS + Cloudfront + ECR + Farget)
 - Node.js
-- AWS CLI
-- Docker Compose
+- Reactjs
 
----
-
-## 🚀 How It Works
-1. User uploads a video → `raw-videos` bucket.
-2. S3 event fires → sends message to SQS.
-3. Node.js listener receives event.
-4. (Future step) Trigger Docker-based transcoding.
-
----
-
-## 📁 Project Structure
-
-```
-video-transcoding-pipeline/
-│
-├── docker-compose.yml       # LocalStack instance
-├── infra/
-│   └── setup.sh             # Creates S3 buckets + SQS + notifications
-├── src/
-│   └── sqs-listener.js      # Node.js listener for events
-├── README.md
-```
 
 ---
 

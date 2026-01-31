@@ -30,8 +30,9 @@ const ACCEPTED_VIDEO_TYPES = [
   'video/quicktime'
 ];
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB in bytes
-const MAX_FILES = 5;
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+
+const MAX_FILES = 1;
 
 export const UploadModal: React.FC<UploadModalProps> = ({
   isOpen,
@@ -228,21 +229,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     }
 
     setIsUploading(true);
-
+    let completedFiles = 0;
     try {
       // Upload files sequentially to avoid overwhelming the server
       for (const uploadFile of validFiles) {
         try {
           // await simulateUpload(uploadFile);
           await processFileUpload(uploadFile);
+          completedFiles += 1;
         } catch (error) {
           console.error(`Failed to upload ${uploadFile.file.name}:`, error);
         }
       }
 
       // Check if any uploads completed successfully
-      const completedFiles = uploadFiles.filter(f => f.status === 'completed');
-      if (completedFiles.length > 0) {
+      if (completedFiles > 0) {
         // For demo purposes, use the first completed file's ID
         const videoId = `video-${Date.now()}`;
         onUploadComplete(videoId);

@@ -1,31 +1,9 @@
 services:
-  localstack:
-    image: localstack/localstack:latest
-    container_name: localstack
-    ports:
-      - "4566:4566" # LocalStack edge/ALL services port
-      - "4571:4571"
-    environment:
-      - SERVICES=s3,sqs,ecr,ecs,iam,logs
-      - DEBUG=1
-      - DATA_DIR=/tmp/localstack/data
-      - DEFAULT_REGION=ap-south-1
-    volumes:
-      - ./localstack:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - localstack-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   postgres:
     image: postgres:16-alpine
     container_name: video-transcoding-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_DB=video_transcoding
       - POSTGRES_USER=postgres
@@ -34,12 +12,26 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/init:/docker-entrypoint-initdb.d
     networks:
-      - localstack-network
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    
+  migrate:
+    image: video-transcoding-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: dbmate up
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/video_trancoder?sslmode=disable
+    networks:
+      - app-network
 
   backend:
     build:
@@ -48,38 +40,16 @@ services:
     container_name: video-transcoding-backend
     ports:
       - "3000:3000"
-    environment:
-      - ENVIRONMENT=dev
-      # AWS Credentials (dummy values for LocalStack)
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=ap-south-1
-      - AWS_REGION=ap-south-1
-      # LocalStack specific settings
-      - AWS_SQS_URL=http://localstack:4566/000000000000/video-upload-events
-      - AWS_SQS_QUEUE_NAME=video-upload-events
-      - AWS_RAW_BUCKET=raw-videos
-      - AWS_PROCESSED_BUCKET=processed-videos
-      - AWS_ENDPOINT_MODE=localstack
-      - AWS_ENDPOINT_URL=http://localstack:4566
-      # Database settings
-      - DB_HOST=postgres
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_DATABASE=video_transcoding
-      - DB_PORT=5432
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/video_transcoding?sslmode=disable
-      # Other settings
-      - VIDEO_PLAYER_HOST=http://localhost:5174
+    env_file:
+      - ./backend/.env
+    command: ["npm", "start"]
     volumes:
       - ./backend:/app
       - /app/node_modules
     networks:
-      - localstack-network
+      - app-network
     depends_on:
       postgres:
-        condition: service_healthy
-      localstack:
         condition: service_healthy
     restart: unless-stopped
 
@@ -87,6 +57,6 @@ volumes:
   postgres_data:
 
 networks:
-  localstack-network:
-    name: localstack-network
+  app-network:
+    name: app-network
     driver: bridge

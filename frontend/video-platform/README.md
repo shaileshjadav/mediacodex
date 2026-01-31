@@ -1,4 +1,4 @@
-# Video Platform UI
+# Media codex UI
 
 A modern React-based video management platform with upload, processing status tracking, and embedding capabilities.
 

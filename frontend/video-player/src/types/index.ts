@@ -22,27 +22,9 @@ export interface Video {
 }
 
 export type VideoStatus =
-  | 'uploading'
-  | 'pending'
-  | 'processing'
-  | 'completed'
-  | 'failed';
+  | "UPLOADED"
+  | "QUEUED"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED";
 
-export interface ProcessingLog {
-  id: string;
-  videoId: string;
-  level: 'info' | 'warn' | 'error';
-  message: string;
-  timestamp: Date;
-  stage: string;
-}
-
-export interface ProcessingStatus {
-  videoId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  currentStage: string;
-  logs: ProcessingLog[];
-  createdAt: Date;
-  updatedAt: Date;
-}

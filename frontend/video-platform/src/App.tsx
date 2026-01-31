@@ -12,6 +12,7 @@ import {
 } from './components';
 import EmbedPage from './pages/EmbedPage';
 import { useState } from 'react';
+import { VIDEO_STATUS } from './utils/constants';
 
 function App() {
   return (
@@ -29,17 +30,16 @@ function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
-  const { videos, selectedVideo, selectVideo, refresh } = useVideos();
+  const { videos, selectedVideo, selectVideo, addVideo } = useVideos();
 
   const handleUploadComplete = (videoId: string) => {
     setIsModalOpen(false);
-    refresh(); // Refresh the video list after upload
-    console.log('Upload completed for video:', videoId);
+    addVideo(videoId); // Refresh the video list after upload
   };
 
   const handleVideoSelect = (videoId: string) => {
     const video = videos.find((v) => v.id === videoId);
-    if (video) {
+    if (video && video.status === VIDEO_STATUS.COMPLETED) {
       selectVideo(video);
       setIsPlayerModalOpen(true);
     }

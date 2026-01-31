@@ -4,11 +4,11 @@ import {
   GetUploadUrlResponse,
   Video,
   GetPresigneUrlRequestBody,
+  GetPresigneUrlResponse,
 } from "../../types/video.types";
 import * as videoService from "../services/video.service";
 import { generateEmbedToken } from "../../utils/jwt";
 import { CLOUDFRONT_DOMAIN_NAME } from "../../config/constants";
-import { CloudfrontSignedCookiesOutput } from "@aws-sdk/cloudfront-signer";
 
 export const getUploadUrl = async (
   req: Request<{}, {}, GetUploadUrlRequestBody>,
@@ -37,9 +37,9 @@ export const getVideoList = async (
 
 export const getPresignedUrl = async (
   req: Request<{}, {}, GetPresigneUrlRequestBody>,
-  res: Response<{ message: string }>,
+  res: Response<{ url: string }>,
 ): Promise<void> => {
-  const cookies: CloudfrontSignedCookiesOutput = await videoService.getPresignedUrl(
+  const {url, cookies}: GetPresigneUrlResponse = await videoService.getPresignedUrl(
     req.body.videoId,
     req.body.quality,
   );
@@ -58,11 +58,12 @@ export const getPresignedUrl = async (
   };
 
   res
-  .cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOptions)
+  // .cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOptions)
   .cookie("CloudFront-Signature", cookies["CloudFront-Signature"], cookieOptions)
   .cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], cookieOptions)
+  .cookie("CloudFront-Expires", cookies["CloudFront-Expires"], cookieOptions)
   .status(200)
-  .json({ message: "Signed cookies set" });
+  .json({ url });
 };
 export const generateEmbedCode = async (
   req: Request<{ videoId: string }, {}, { domain?: string }>,
@@ -81,7 +82,7 @@ export const generateEmbedCode = async (
     const token = generateEmbedToken({
       videoId,
       domain,
-      userId: "anonymous", // In real app, get from auth
+      userId: req.userId, 
     });
 
     // Generate embed code

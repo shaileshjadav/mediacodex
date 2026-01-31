@@ -1,6 +1,7 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import { getVideoList } from "../apis/video";
 import type { Video } from "../types";
+import { VIDEO_STATUS } from "../utils/constants";
 
 type VideoContextType = {
   videos: Video[];
@@ -8,6 +9,7 @@ type VideoContextType = {
   isInitialLoading: boolean;
   error: string | null;
   refresh: () => void;
+  addVideo: (videoId: string) => void;
 
     selectedVideo: Video | null;
   selectVideo: (video: Video) => void;
@@ -23,7 +25,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [error, setError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Video|null>(null);
 
-  const loadVideos = async (isRefresh = false) => {
+  const loadVideos = useCallback(async (isRefresh = false) => {
     try {
       // Only show loading spinner on initial load, not on refresh
       if (!isRefresh) {
@@ -43,19 +45,42 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setLoading(false);
     }
-  };
+  }, [isInitialLoading]);
 
   const refreshVideos = () => {
     loadVideos(true); // Pass true to indicate this is a refresh
   };
 
-  //  auto refresh every 30 seconds
-  useEffect(() => {
-    loadVideos(); // Initial load
-    const interval = setInterval(() => loadVideos(true), 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+  const addVideo = useCallback((videoId : string)=>{
+    const newVideos = [...videos];
+    const tempVideo: Video = {
+      id: newVideos.length.toString(),
+      title: 'uploding...',
+      description: '',
+      videoId: videoId,
+      status: VIDEO_STATUS.PROCESSING,
+      uploadedAt: new Date(),
+      processedUrls: {},
+      originalUrl: '',
+      filename: '',
+      fileSize: 0,
+    }
+    newVideos.push(tempVideo);
+    setVideos(newVideos);
+  },[videos]);
 
+  useEffect(() => {
+    loadVideos();
+
+    const interval = setInterval(() => {
+      // TODO: poll only if processing videos exist
+      // if (videos.some(v => v.status === VIDEO_STATUS.PROCESSING)) {
+        loadVideos(true);
+      // }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadVideos]);
   return (
     <VideoContext.Provider
       value={{
@@ -64,6 +89,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isInitialLoading,
         error,
         refresh: refreshVideos,
+        addVideo,
         selectedVideo,
         selectVideo: setSelectedVideo,
         clearSelectedVideo: () => setSelectedVideo(null),
