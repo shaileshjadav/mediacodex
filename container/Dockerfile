@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 COPY index.js .
-COPY .env .
+
 
 RUN npm install
 

@@ -3,12 +3,14 @@ const fs = require("node:fs/promises");
 const ffmpeg = require("fluent-ffmpeg");
 const { createReadStream, existsSync, mkdirSync } = require("node:fs");
 const path = require("node:path");
-// config env file
-require("dotenv").config();
+// // config env file
+// require("dotenv").config();
 
 // Set variables
-const originalFilePath = 'original-video.mp4';
-const outputBasePath = 'transcoded-videos';
+const originalFilePath = process.env.FILE_NAME;
+const inputBucket = process.env.INPUT_BUCKET;
+const outputBucket = process.env.OUTPUT_BUCKET;
+const outputBasePath = process.env.VIDEO_ID;
 const segmentTime = 10;
 const codecVideo = 'libx264';
 const codecAudio = 'aac';
@@ -71,35 +73,41 @@ const getFiles = async (dir) => {
 
 
 const uploadDir = async (client, dir) => {
-    const files = await getFiles(dir);
-    const UPLOAD_BUCKET_NAME = process.env.UPLOAD_BUCKET_NAME;
-
+    const files = await getFiles(dir.localPath);
     const uploads = files.map(async (filePath) => {
+        const fileName = filePath.split('/').pop();
         const bodyData = createReadStream(path.resolve(filePath));
         client.send(new PutObjectCommand({
-            Bucket: UPLOAD_BUCKET_NAME,
-            Key: filePath,
+            Bucket: outputBucket,
+            Key: `${dir.objectStorePath}/${fileName}`,
             Body: bodyData,
         }));    
         return filePath;
     })
 
-    console.log(`upload successfully directory: ${dir}`);
+    console.log(`upload successfully directory: ${dir.objectStorePath}`);
     
     return Promise.all(uploads);
 
 }
 
+const extractIdFromPath = (path) => {
+  const fileName = path.split("/").pop() || '';
+  return fileName.split(".")[0];
+}
 
 // download the video
 async function init(){
     try {
         const client = new S3Client({
             region: process.env.AWS_REGION,
-            credentials:{
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            },
+            // endpoint: "http://localstack:4566", // For localstack
+            // forcePathStyle:true, // for localstack
+            
+            // credentials:{
+            //     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            // },
             // requestHandler: {
             //     requestTimeout:0,
             //     httpsAgent: {
@@ -108,15 +116,20 @@ async function init(){
             // }
         });
         
-        const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-        const KEY = process.env.KEY;
+        const videoId = extractIdFromPath(originalFilePath)
 
         const videoFile = await client.send(new GetObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: KEY,
+            Bucket: inputBucket,
+            Key: originalFilePath,
         }))
 
-
+        
+        const dir = path.dirname(originalFilePath);
+        if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true });
+            console.log(`Created directory: ${dir}`);
+        }
+        
         await fs.writeFile(originalFilePath, videoFile.Body);
         console.log("file downloaded successfully", originalFilePath);
         
@@ -126,7 +139,11 @@ async function init(){
         for (const { width, height } of resolutions) {
             const outputDir = path.resolve(outputBasePath, `${width}x${height}`);
             promises.push(generateHLS(originalFilePath, outputDir, width, height));
-            outputDirs.push(`${outputBasePath}/${width}x${height}`); // path of s3 files to be upload
+            // outputDirs.push(`${outputBasePath}/${width}x${height}`); // path of s3 files to be upload
+            outputDirs.push({
+                localPath:`${outputBasePath}/${width}x${height}`, // local file system path
+                objectStorePath: `${videoId}/${width}x${height}`, // path of s3 files to be upload
+            })
         }
 
         const videoFiles = await Promise.all(promises);

@@ -1,0 +1,16 @@
+# Copy this file to terraform.tfvars and update with your values
+access_key = "test"
+secret_key = "test"
+region = "ap-south-1"
+raw_bucket_name = "raw-videos"
+processed_bucket_name = "processed-videos"
+sqs_queue_name = "video-upload-events"
+ecr_repository_name = "video-transcoder-repository"
+ecs_cluster_name = "video-transcoding-cluster"
+ecs_task_execution_role = "video-transcoding-ecsTaskExecutionRole"
+ecs_task_role = "video-transcoding-ecsTaskRole"
+
+# CloudFront Configuration
+cloudfront_distribution_comment = "HLS Video Streaming Distribution"
+cloudfront_price_class = "PriceClass_100"
+cloudfront_public_key_path = "./certs/cloudfront_public_key.pem"
