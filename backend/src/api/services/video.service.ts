@@ -13,7 +13,7 @@ import * as videoDal from "../dataAccess/video";
 import { AWS_PROCESSED_BUCKET, RESOLUTION_MAP } from "../../config/constants";
 import * as fs from 'fs';
 import { CloudfrontSignedCookiesOutput, getSignedCookies } from "@aws-sdk/cloudfront-signer";
-import {CLOUDFRONT_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY_PATH, CLOUDFRONT_KEY_PAIR_ID } from "../../config/constants";
+import {CLOUDFRONT_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY, CLOUDFRONT_KEY_PAIR_ID } from "../../config/constants";
 
 
 
@@ -129,12 +129,13 @@ async function getVideoPresignedUrl(
 
   const [resolution] = resolutionEntry;
 
-  if(!CLOUDFRONT_PRIVATE_KEY_PATH || !CLOUDFRONT_KEY_PAIR_ID){
+  if(!CLOUDFRONT_PRIVATE_KEY || !CLOUDFRONT_KEY_PAIR_ID){
     throw new Error("config error");
   }
   const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
   const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
-  const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
+  // const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY, 'utf-8');
+  const privateKey = CLOUDFRONT_PRIVATE_KEY;
   const cookies = getSignedCookies({
       url,
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,

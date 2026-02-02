@@ -87,13 +87,13 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     setError(errorMessage);
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  };
+  // const toggleFullscreen = () => {
+  //   if (!document.fullscreenElement) {
+  //     containerRef.current?.requestFullscreen();
+  //   } else {
+  //     document.exitFullscreen();
+  //   }
+  // };
 
   const handleClose = () => {
     setError(null);
