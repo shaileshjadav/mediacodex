@@ -57,7 +57,7 @@ jobs:
           envkey_DB_DATABASE: ${{ secrets.DB_DATABASE }}
           envkey_DB_PORT: ${{ secrets.DB_PORT }}
     
-          directory: backend
+          directory: var/www/mediacodex/backend
           file_name: .env
           fail_on_empty: false
 
