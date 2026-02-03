@@ -65,10 +65,10 @@ jobs:
         run: |
           ls -a backend
 
-      - name: Echo Workspace Path
+      - name: Copy .env to server
         run: |
-          echo "The full path is: $GITHUB_WORKSPACE"
-          echo "The context path is: ${{ github.workspace }}"
+          scp backend/.env ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/var/www/mediacodex/backend/.env
+
 
       - name: Deploy Via SSH
         uses: appleboy/ssh-action@master
