@@ -71,7 +71,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             # Navigate to application directory
-            cd ${{ secrets.DEPLOY_PATH || '/root/mediacodex' }}
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/mediacodex' }}
             
             # Pull latest changes
             git pull origin main
