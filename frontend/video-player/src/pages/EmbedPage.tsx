@@ -26,7 +26,7 @@ const EmbedPage: React.FC = () => {
 
   const [processedUrls, setProcessedUrls] = useState([]);
 
-  // Available quality options based on processed URLs
+  // Available quality options based on processed URL
   const getQualityOptions = (): QualityOption[] => {
     const options: QualityOption[] = [];
 
