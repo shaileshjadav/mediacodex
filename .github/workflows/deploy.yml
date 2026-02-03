@@ -57,9 +57,18 @@ jobs:
           envkey_DB_DATABASE: ${{ secrets.DB_DATABASE }}
           envkey_DB_PORT: ${{ secrets.DB_PORT }}
     
-          directory: ${{ github.workspace }}/backend
+          directory: backend
           # file_name: '.env'
           fail_on_empty: false
+
+      - name: List files to confirm .env creation
+        run: |
+          ls -a backend
+
+      - name: Echo Workspace Path
+        run: |
+          echo "The full path is: $GITHUB_WORKSPACE"
+          echo "The context path is: ${{ github.workspace }}"
 
       - name: Deploy Via SSH
         uses: appleboy/ssh-action@master
