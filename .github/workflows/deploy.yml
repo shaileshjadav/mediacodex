@@ -64,6 +64,11 @@ jobs:
       - name: List files to confirm .env creation
         run: |
           ls -a backend
+      
+      - name: Add SSH host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Copy .env to server
         run: |
