@@ -39,9 +39,9 @@ jobs:
           envkey_ECS_TASK_ARN: ${{ secrets.ECS_TASK_ARN }}
           
 
-          envkey_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
           envkey_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
           envkey_CLOUDFRONT_KEY_PAIR_ID: ${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
+          envkey_CLOUDFRONT_DOMAIN_NAME: ${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
           
           envkey_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
           envkey_CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
@@ -55,9 +55,7 @@ jobs:
           envkey_DB_DATABASE: ${{ secrets.DB_DATABASE }}
           envkey_DB_PORT: ${{ secrets.DB_PORT }}
 
-          envkey_CLOUDFRONT_DOMAIN_NAME: ${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
-          envkey_CLOUDFRONT_KEY_PAIR_ID: ${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
-          envkey_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
+          
           
           directory: backend
           file_name: .env
