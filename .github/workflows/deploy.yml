@@ -22,6 +22,10 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
+            # NVM setup
+            export NVM_DIR=/home/${{ secrets.SSH_USERNAME }}/.nvm
+            source /home/${{ secrets.SSH_USERNAME }}/.nvm/nvm.sh
+
             # Navigate to application directory
             cd ${{ secrets.DEPLOY_PATH || '/var/www/mediacodex' }}
             
