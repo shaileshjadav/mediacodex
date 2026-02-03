@@ -27,7 +27,7 @@ jobs:
           envkey_AWS_RAW_BUCKET: ${{ secrets.AWS_RAW_BUCKET }}
           envkey_AWS_PROCESSED_BUCKET: ${{ secrets.AWS_PROCESSED_BUCKET }}
           
-          envkey_AWS_ENDPOINT_MODE = aws
+          envkey_AWS_ENDPOINT_MODE: "aws"
 
           envkey_AWS_SQS_URL: ${{ secrets.AWS_SQS_URL }}
           envkey_AWS_SQS_QUEUE_NAME: ${{ secrets.AWS_SQS_QUEUE_NAME }}
