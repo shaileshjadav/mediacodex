@@ -1,0 +1,90 @@
+name: Deploy NodeJS Application to Hosting
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Backend Environment File
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_NODE_ENV: production
+          envkey_PORT: ${{ secrets.PORT || '3000' }}
+          envkey_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          
+          envkey_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          envkey_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          envkey_AWS_REGION: ${{ secrets.AWS_REGION }}
+          
+          envkey_AWS_RAW_BUCKET: ${{ secrets.AWS_RAW_BUCKET }}
+          envkey_AWS_PROCESSED_BUCKET: ${{ secrets.AWS_PROCESSED_BUCKET }}
+          
+          envkey_AWS_ENDPOINT_MODE = aws
+
+          envkey_AWS_SQS_URL: ${{ secrets.AWS_SQS_URL }}
+          envkey_AWS_SQS_QUEUE_NAME: ${{ secrets.AWS_SQS_QUEUE_NAME }}
+          
+          envkey_ECS_CLUSTER_ARN: ${{ secrets.ECS_CLUSTER_ARN }}
+          envkey_ECS_SECURITY_GROUP: ${{ secrets.ECS_SECURITY_GROUP }}
+          envkey_ECR_CONTAINER_NAME: ${{ secrets.ECR_CONTAINER_NAME }}
+          envkey_ECS_TASK_SUBNETS: ${{ secrets.ECS_TASK_SUBNETS }}
+          envkey_ECS_TASK_ARN: ${{ secrets.ECS_TASK_ARN }}
+          
+
+          envkey_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          envkey_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
+          envkey_CLOUDFRONT_KEY_PAIR_ID: ${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
+          
+          envkey_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          envkey_CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          
+          envkey_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          envkey_VIDEO_PLAYER_HOST: ${{ secrets.VIDEO_PLAYER_HOST }}
+          
+          envkey_DB_HOST: ${{ secrets.DB_HOST }}
+          envkey_DB_USER: ${{ secrets.DB_USER }}
+          envkey_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          envkey_DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          envkey_DB_PORT: ${{ secrets.DB_PORT }}
+
+          envkey_CLOUDFRONT_DOMAIN_NAME: ${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
+          envkey_CLOUDFRONT_KEY_PAIR_ID: ${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
+          envkey_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
+          
+          directory: backend
+          file_name: .env
+          fail_on_empty: false
+
+      - name: Deploy Via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            # Navigate to application directory
+            cd ${{ secrets.DEPLOY_PATH || '/root/mediacodex' }}
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Stop existing containers
+            docker compose down
+            
+            # Build and start containers with latest changes
+            docker compose up -d --build
+            
+            # Clean up unused Docker images
+            docker image prune -f
+            
+            # Show running containers
+            docker compose ps
