@@ -17,6 +17,7 @@ jobs:
       - name: Create Backend Environment File
         uses: SpicyPizza/create-envfile@v2.0
         with:
+          envkey_DEBUG: true
           envkey_NODE_ENV: production
           envkey_PORT: ${{ secrets.PORT || '3000' }}
           envkey_DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -55,9 +56,7 @@ jobs:
           envkey_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           envkey_DB_DATABASE: ${{ secrets.DB_DATABASE }}
           envkey_DB_PORT: ${{ secrets.DB_PORT }}
-
-          
-          
+    
           directory: backend
           file_name: .env
           fail_on_empty: false
