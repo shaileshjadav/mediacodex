@@ -124,43 +124,43 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     setUploadFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const simulateUpload = async (uploadFile: UploadFile): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15;
+  // const simulateUpload = async (uploadFile: UploadFile): Promise<void> => {
+  //   return new Promise((resolve, reject) => {
+  //     let progress = 0;
+  //     const interval = setInterval(() => {
+  //       progress += Math.random() * 15;
 
-        setUploadFiles(prev => prev.map(f =>
-          f.id === uploadFile.id
-            ? { ...f, progress: Math.min(progress, 100), status: 'uploading' }
-            : f
-        ));
+  //       setUploadFiles(prev => prev.map(f =>
+  //         f.id === uploadFile.id
+  //           ? { ...f, progress: Math.min(progress, 100), status: 'uploading' }
+  //           : f
+  //       ));
 
-        if (progress >= 100) {
-          clearInterval(interval);
+  //       if (progress >= 100) {
+  //         clearInterval(interval);
 
-          // Simulate occasional upload failures for demonstration
-          const shouldFail = Math.random() < 0.1; // 10% failure rate
+  //         // Simulate occasional upload failures for demonstration
+  //         const shouldFail = Math.random() < 0.1; // 10% failure rate
 
-          if (shouldFail) {
-            setUploadFiles(prev => prev.map(f =>
-              f.id === uploadFile.id
-                ? { ...f, status: 'error', error: 'Upload failed. Please try again.' }
-                : f
-            ));
-            reject(new Error('Upload failed'));
-          } else {
-            setUploadFiles(prev => prev.map(f =>
-              f.id === uploadFile.id
-                ? { ...f, progress: 100, status: 'completed' }
-                : f
-            ));
-            resolve();
-          }
-        }
-      }, 200);
-    });
-  };
+  //         if (shouldFail) {
+  //           setUploadFiles(prev => prev.map(f =>
+  //             f.id === uploadFile.id
+  //               ? { ...f, status: 'error', error: 'Upload failed. Please try again.' }
+  //               : f
+  //           ));
+  //           reject(new Error('Upload failed'));
+  //         } else {
+  //           setUploadFiles(prev => prev.map(f =>
+  //             f.id === uploadFile.id
+  //               ? { ...f, progress: 100, status: 'completed' }
+  //               : f
+  //           ));
+  //           resolve();
+  //         }
+  //       }
+  //     }, 200);
+  //   });
+  // };
 
   const processFileUpload = async (uploadFile: UploadFile): Promise<void> => {
     const videoUploadReqData: VideoUploadUrlRequest = {

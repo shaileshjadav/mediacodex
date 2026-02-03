@@ -15,11 +15,11 @@ interface VideoPlayerProps {
   selectedQuality?: string;
 }
 
-interface QualityOption {
-  label: string;
-  value: string;
-  url: string;
-}
+// interface QualityOption {
+//   label: string;
+//   value: string;
+//   url: string;
+// }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   src,
