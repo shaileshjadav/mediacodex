@@ -38,6 +38,60 @@ jobs:
             npm install 
             npm -g install typescript dbmate
             
+            cat <<EOF > .env
+            ## clerk auth keys
+            CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}
+            CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
+
+
+            ## AWS Configuration
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_SQS_URL=${{ secrets.AWS_SQS_URL }}
+            AWS_SQS_QUEUE_NAME=${{ secrets.AWS_SQS_QUEUE_NAME }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            AWS_RAW_BUCKET=${{ secrets.AWS_RAW_BUCKET }}
+            AWS_PROCESSED_BUCKET=${{ secrets.AWS_PROCESSED_BUCKET }}
+            AWS_ENDPOINT_MODE=aws
+
+            ## AWS ECS config
+            ECS_CLUSTER_ARN=${{ secrets.ECS_CLUSTER_ARN }}
+            ECS_SECURITY_GROUP=${{ secrets.ECS_SECURITY_GROUP }}
+            ECR_CONTAINER_NAME=${{ secrets.ECR_CONTAINER_NAME }}
+            ## comma separated subnet ids
+            ECS_TASK_SUBNETS=${{ secrets.ECS_TASK_SUBNETS }}
+
+            ## AWS ECS Task config
+            ECS_TASK_ARN=${{ secrets.ECS_TASK_ARN }}
+
+
+            ## JWT Configuration
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=5m
+
+            ## Database
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_DATABASE=${{ secrets.DB_DATABASE }}
+            DB_PORT=${{ secrets.DB_PORT }}
+
+            ## For Migration
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+
+            ## Player Host
+            VIDEO_PLAYER_HOST=${{ secrets.VIDEO_PLAYER_HOST }}
+
+            CLOUDFRONT_DOMAIN_NAME=${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
+            # CLOUDFRONT_PRIVATE_KEY_PATH=./certs/cloudfront-private-key.pem
+            CLOUDFRONT_KEY_PAIR_ID=${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
+
+            VIDEO_STATUS_CRON_INTERVAL_MINUTES=${{ secrets.VIDEO_STATUS_CRON_INTERVAL_MINUTES }}
+
+            CLOUDFRONT_PRIVATE_KEY=${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
+
+            EOF
+            
             # Build TypeScript application with memory limit
             export NODE_OPTIONS="--max-old-space-size=4096"
             npm run build
