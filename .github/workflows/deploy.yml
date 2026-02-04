@@ -96,9 +96,13 @@ jobs:
 
             EOF
             
+            ## Database Migration
+            npm run migrate:up
+            
             # Build TypeScript application with memory limit
             export NODE_OPTIONS="--max-old-space-size=4096"
             npm run build
+
             
             # # Start the application directly
             pm2 restart mediacodex-app
