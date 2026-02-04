@@ -100,10 +100,7 @@ jobs:
             export NODE_OPTIONS="--max-old-space-size=4096"
             npm run build
             
-            # Kill any existing Node.js processes running on port 3000
-            pkill -f "node.*dist/index.js" || true
-            
-            # Start the application directly
-            pm2 restart mediacodex-app
+            # # Start the application directly
+            # pm2 restart mediacodex-app
 
             
