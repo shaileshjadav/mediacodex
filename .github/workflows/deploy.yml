@@ -40,7 +40,7 @@ jobs:
             cd backend
             
             npm install 
-            npm -g install typescript dbmate
+            # npm -g install typescript dbmate pm2
             
             cat <<EOF > .env
             ## clerk auth keys
@@ -104,6 +104,6 @@ jobs:
             pkill -f "node.*dist/index.js" || true
             
             # Start the application directly
-            nohup npm start > app.log 2>&1 &
+            pm2 restart mediacodex-app
 
             
