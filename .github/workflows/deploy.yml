@@ -24,8 +24,11 @@ jobs:
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             # NVM setup
-            export NVM_DIR=/home/${{ secrets.SSH_USERNAME }}/.nvm
-            source /home/${{ secrets.SSH_USERNAME }}/.nvm/nvm.sh
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+
+            node -v
+            npm -v
 
             # Navigate to application directory
             cd ${{ secrets.DEPLOY_PATH || '/var/www/mediacodex' }}
