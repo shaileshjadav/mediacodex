@@ -101,6 +101,6 @@ jobs:
             npm run build
             
             # # Start the application directly
-            # pm2 restart mediacodex-app
+            pm2 restart mediacodex-app
 
             
