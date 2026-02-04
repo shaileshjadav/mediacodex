@@ -35,7 +35,8 @@ jobs:
             # Install backend dependencies with increased memory limit
             cd backend
             
-            npm install
+            npm install 
+            npm -g install typescript dbmate
             
             # Build TypeScript application with memory limit
             export NODE_OPTIONS="--max-old-space-size=4096"
