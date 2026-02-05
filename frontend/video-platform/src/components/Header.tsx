@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
-  const { isSignedIn, isLoaded, userName } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const location = useLocation();
   
   // Show mobile navigation for authenticated users not on landing page
@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             {isSignedIn ? (
               <>
                 <span className="text-sm text-gray-700 hidden sm:block">
-                  Welcome, {userName}
+                  Welcome
                 </span>
                 <SignOutButton>
                   <button className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors">
