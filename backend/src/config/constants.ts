@@ -30,3 +30,5 @@ export const VIDEO_STATUS = {
 export const VIDEO_STATUS_CRON_INTERVAL_MINUTES: number = process.env.VIDEO_STATUS_CRON_INTERVAL_MINUTES
   ? parseInt(process.env.VIDEO_STATUS_CRON_INTERVAL_MINUTES, 10)
   : 5;
+
+export const CORS_ORIGINS:string|undefined = process.env.CORS_ORIGINS;
