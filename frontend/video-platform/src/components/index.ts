@@ -9,3 +9,5 @@ export { VideoPlayerModal } from './VideoPlayerModal';
 export { EmbedModal } from './EmbedModal';
 export { default as LandingPage } from './LandingPage';
 export { default as DemoVideo } from './DemoVideo';
+export { default as ProtectedRoute } from './ProtectedRoute';
+export { default as PublicRoute } from './PublicRoute';
