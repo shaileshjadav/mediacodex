@@ -104,7 +104,6 @@ export async function getProcessedUrlsFromS3(
       console.log(`Added to processedUrls: ${label} = ${key}`);
     }
 
-    console.log("Final processedUrls:", processedUrls);
     return processedUrls;
   } catch (error) {
     console.error(`Error fetching processed URLs from S3:`, error);
