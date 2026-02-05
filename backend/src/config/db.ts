@@ -1,13 +1,11 @@
 import pg from 'pg';
 
 const { Pool } = pg;
-
+if(!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not defined in environment variables");
+};
 export const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  port: Number(process.env.DB_PORT),
+  connectionString: process.env.DATABASE_URL,
 });
 
 // optional: print errors

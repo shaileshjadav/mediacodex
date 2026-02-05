@@ -17,6 +17,7 @@ const app: Express = express();
 const port = process.env.PORT || 3000;
 
 const allowedOrigins = CORS_ORIGINS?.split(",");
+console.log("Allowed CORS origins:", allowedOrigins);
 if(allowedOrigins) {
   // CORS configuration
   const corsOptions = {
