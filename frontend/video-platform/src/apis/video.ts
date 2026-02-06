@@ -67,7 +67,8 @@ export const getVideoPresignedUrl = async (
     {
       videoId,
       quality,
-    }
+    },
+    { withCredentials: true } // this is required to include cookies in the request, which are needed for CloudFront signed cookies authentication
   );
   return response.data;
 };
