@@ -15,5 +15,6 @@ sketch
 
 .env
 
-dist
-build
+# Build outputs
+dist/
+build/

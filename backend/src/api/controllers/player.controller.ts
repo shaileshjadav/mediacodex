@@ -23,7 +23,7 @@ export const createPlayerSession = async (
 ): Promise<void> => {
   try {
     const { videoId, token } = req.body;
-    console.log(`Creating player session for video: ${videoId}`);
+    
 
     if (!videoId || !token) {
       console.log("Missing videoId or token in request");
