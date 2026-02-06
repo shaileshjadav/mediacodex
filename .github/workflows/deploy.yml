@@ -80,12 +80,11 @@ jobs:
             VIDEO_PLAYER_HOST=${{ secrets.VIDEO_PLAYER_HOST }}
 
             CLOUDFRONT_DOMAIN_NAME=${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
-            # CLOUDFRONT_PRIVATE_KEY_PATH=./certs/cloudfront-private-key.pem
+            CLOUDFRONT_PRIVATE_KEY_PATH=${{ secrets.CLOUDFRONT_PRIVATE_KEY_PATH || './certs/cloudfront_private_key.pem' }}
+            
             CLOUDFRONT_KEY_PAIR_ID=${{ secrets.CLOUDFRONT_KEY_PAIR_ID }}
 
             VIDEO_STATUS_CRON_INTERVAL_MINUTES=${{ secrets.VIDEO_STATUS_CRON_INTERVAL_MINUTES }}
-
-            CLOUDFRONT_PRIVATE_KEY=${{ secrets.CLOUDFRONT_PRIVATE_KEY }}
 
             ## Cors Origins (comma separated)
             CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
