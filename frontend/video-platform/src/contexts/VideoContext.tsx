@@ -55,7 +55,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newVideos = [...videos];
     const tempVideo: Video = {
       id: newVideos.length.toString(),
-      title: 'uploding...',
+      title:'',
       description: '',
       videoId: videoId,
       status: VIDEO_STATUS.PROCESSING,

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Video, VideoStatus } from '../types';
+import { VIDEO_STATUS } from '../utils/constants';
 
 interface VideoCardProps {
   video: Video;
@@ -176,7 +177,8 @@ const VideoCard: React.FC<VideoCardProps> = ({
         <div className="flex gap-2">
           <button
             onClick={onEmbedClick}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium py-3 px-4 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+            className={`w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium py-3 px-4 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${video.status !== VIDEO_STATUS.COMPLETED ? 'disabled:cursor-not-allowed disabled:opacity-50' : ''}`}
+            disabled={video.status !== VIDEO_STATUS.COMPLETED}
           >
             <span className="flex items-center justify-center">
               <svg

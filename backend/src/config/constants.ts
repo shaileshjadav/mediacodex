@@ -17,7 +17,7 @@ export const RESOLUTION_MAP: Record<string, string> = {
 export const AWS_PROCESSED_BUCKET: string|undefined = process.env.AWS_PROCESSED_BUCKET;
 
 export const CLOUDFRONT_DOMAIN_NAME: string|undefined = process.env.CLOUDFRONT_DOMAIN_NAME;
-export const CLOUDFRONT_PRIVATE_KEY: string|undefined = process.env.CLOUDFRONT_PRIVATE_KEY;
+export const CLOUDFRONT_PRIVATE_KEY_PATH: string|undefined = process.env.CLOUDFRONT_PRIVATE_KEY_PATH;
 export const CLOUDFRONT_KEY_PAIR_ID: string|undefined = process.env.CLOUDFRONT_KEY_PAIR_ID;
 
 export const VIDEO_STATUS = {
@@ -32,3 +32,5 @@ export const VIDEO_STATUS_CRON_INTERVAL_MINUTES: number = process.env.VIDEO_STAT
   : 5;
 
 export const CORS_ORIGINS:string|undefined = process.env.CORS_ORIGINS;
+
+export const DOMAIN_NAME:string|undefined = process.env.DOMAIN_NAME;

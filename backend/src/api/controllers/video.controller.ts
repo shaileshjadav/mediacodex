@@ -8,7 +8,7 @@ import {
 } from "../../types/video.types";
 import * as videoService from "../services/video.service";
 import { generateEmbedToken } from "../../utils/jwt";
-import { CLOUDFRONT_DOMAIN_NAME } from "../../config/constants";
+import {  DOMAIN_NAME } from "../../config/constants";
 
 export const getUploadUrl = async (
   req: Request<{}, {}, GetUploadUrlRequestBody>,
@@ -46,15 +46,15 @@ export const getPresignedUrl = async (
   if(!cookies){
     throw new Error("Could not generate signed cookies");
   }
-  if(!CLOUDFRONT_DOMAIN_NAME){
-    throw new Error("CloudFront domain name is not configured");
+  if(!DOMAIN_NAME){
+    throw new Error("Domain name is not configured");
   }
   const cookieOptions:CookieOptions = {
     httpOnly: true,
-    // secure: true,       // MUST be true in production (HTTPS)
+    secure: true,       // MUST be true in production (HTTPS)
     sameSite: "none",   // REQUIRED if frontend & CF are on different domains
     path: "/",
-    domain: CLOUDFRONT_DOMAIN_NAME.replace('https://', '') // must match CloudFront domain or parent
+    domain: DOMAIN_NAME // must match parent
   };
 
   res
