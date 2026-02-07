@@ -312,6 +312,37 @@ resource "aws_cloudfront_key_group" "hls_key_group" {
 }
 
 
+# CloudFront Response Headers Policy for CORS
+resource "aws_cloudfront_response_headers_policy" "cors_policy" {
+  name    = "hls-cors-policy"
+  comment = "CORS policy for HLS streaming"
+
+  cors_config {
+    // Attach CORS headers to attach cookies and credentials players to work properly
+    access_control_allow_credentials = true
+
+    access_control_allow_methods {
+      items = ["GET", "HEAD", "OPTIONS"]
+    }
+
+    access_control_allow_origins {
+      items = var.cloudfront_cors_allowed_origins
+    }
+
+     # Standard headers for HLS.js and other players
+    access_control_allow_headers {
+      items = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Range"]
+    }
+
+    access_control_expose_headers {
+      items = ["ETag"]
+    }
+
+    access_control_max_age_sec = 3600
+    origin_override            = true
+  }
+}
+
 # CloudFront Distribution for HLS Streaming
 resource "aws_cloudfront_distribution" "hls_distribution" {
   origin {
@@ -328,7 +359,7 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
   # Cache behavior for HLS files (.m3u8 and .ts)
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
     forwarded_values {
@@ -336,8 +367,11 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
       headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
 
       cookies {
-        forward = "none"
+        # CloudFront must forward the specific signed cookies to itself for validation
+        forward = "whitelist"
+        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
       }
+      
     }
 
     viewer_protocol_policy = "redirect-to-https"
@@ -348,13 +382,18 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
 
     # Enable signed URLs if key group is created
     trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+
+    # Attach CORS response headers policy
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
+    
+    // TODO: attach domain and SSL certificate for custom domain support
   }
 
   # Specific cache behavior for .m3u8 files (shorter TTL for playlist updates)
   ordered_cache_behavior {
     path_pattern     = "*.m3u8"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
     forwarded_values {
@@ -362,7 +401,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
       headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
 
       cookies {
-        forward = "none"
+        # CloudFront must forward the specific signed cookies to itself for validation
+        forward = "whitelist"
+        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
       }
     }
 
@@ -374,13 +415,16 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
 
     # Enable signed URLs if key group is created
     trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+
+    # Attach CORS response headers policy
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
   }
 
   # Cache behavior for .ts segments (longer TTL as they don't change)
   ordered_cache_behavior {
     path_pattern     = "*.ts"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
     forwarded_values {
@@ -388,7 +432,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
       headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
 
       cookies {
-        forward = "none"
+        # CloudFront must forward the specific signed cookies to itself for validation
+        forward = "whitelist"
+        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
       }
     }
 
@@ -400,6 +446,9 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
 
     # Enable signed URLs if key group is created
     trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
+
+    # Attach CORS response headers policy
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
   }
 
   price_class = var.cloudfront_price_class
