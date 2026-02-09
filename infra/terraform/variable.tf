@@ -74,3 +74,8 @@ variable "cloudfront_public_key_path" {
     type        = string
     default     = "./certs/cloudfront_public_key.pem"
 }
+
+variable "cloudfront_cors_allowed_origins" {
+    description = "List of allowed origins for CORS"
+    type        = list(string)
+}

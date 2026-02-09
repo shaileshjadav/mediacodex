@@ -54,7 +54,7 @@ export const getPresignedUrl = async (
     secure: true,       // MUST be true in production (HTTPS)
     sameSite: "none",   // REQUIRED if frontend & CF are on different domains
     path: "/",
-    domain: DOMAIN_NAME // must match parent
+    domain: `.${DOMAIN_NAME}` // Leading dot allows subdomains (e.g., .mediacodex.cloud works for both mediacodex.cloud and stream.mediacodex.cloud)
   };
 
   res
