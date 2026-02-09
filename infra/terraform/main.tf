@@ -344,7 +344,7 @@ resource "aws_cloudfront_response_headers_policy" "cors_policy" {
 }
 
 resource "aws_cloudfront_cache_policy" "signed_cookie_policy" {
-  name        = "signed-cookie-cache-policy"
+  name        = "video-transcoder-signed-cookie-cache-policy"
   comment     = "Cache policy for signed cookies - forwards auth cookies but excludes from cache key"
   default_ttl = 3600
   max_ttl     = 86400
@@ -371,7 +371,7 @@ resource "aws_cloudfront_cache_policy" "signed_cookie_policy" {
 }
 
 resource "aws_cloudfront_cache_policy" "m3u8_cache_policy" {
-  name        = "m3u8-cache-policy"
+  name        = "video-transcoder-m3u8-cache-policy"
   comment     = "Short TTL cache policy for HLS manifests"
   default_ttl = 5
   max_ttl     = 60
@@ -396,7 +396,7 @@ resource "aws_cloudfront_cache_policy" "m3u8_cache_policy" {
 }
 
 resource "aws_cloudfront_cache_policy" "ts_cache_policy" {
-  name        = "ts-segments-cache-policy"
+  name        = "video-transcoder-ts-segments-cache-policy"
   comment     = "Long TTL cache policy for HLS segments"
   default_ttl = 86400
   max_ttl     = 31536000
