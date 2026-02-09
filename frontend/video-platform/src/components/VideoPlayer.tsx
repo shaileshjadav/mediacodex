@@ -54,7 +54,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     if (Hls.isSupported()) {
       // If HLS.js is supported, initialize it
-      const hls = new Hls({debug: true});
+      const hls = new Hls({
+        debug: true,
+        xhrSetup: (xhr) => {
+          xhr.withCredentials = true;
+        }
+      });
       hlsRef.current = hls;
 
       hls.loadSource(src);
