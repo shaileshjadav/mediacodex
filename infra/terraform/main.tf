@@ -343,6 +343,107 @@ resource "aws_cloudfront_response_headers_policy" "cors_policy" {
   }
 }
 
+resource "aws_cloudfront_cache_policy" "signed_cookie_policy" {
+  name        = "signed-cookie-cache-policy"
+  comment     = "Cache policy for signed cookies - forwards auth cookies but excludes from cache key"
+  default_ttl = 3600
+  max_ttl     = 86400
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      # Forward signed cookies to origin but don't include in cache key
+      cookie_behavior = "none"
+    }
+    headers_config {
+      # Include CORS headers for proper HLS playback
+      header_behavior = "whitelist"
+      headers {
+        items = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+  }
+}
+
+resource "aws_cloudfront_cache_policy" "m3u8_cache_policy" {
+  name        = "m3u8-cache-policy"
+  comment     = "Short TTL cache policy for HLS manifests"
+  default_ttl = 5
+  max_ttl     = 60
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+  }
+}
+
+resource "aws_cloudfront_cache_policy" "ts_cache_policy" {
+  name        = "ts-segments-cache-policy"
+  comment     = "Long TTL cache policy for HLS segments"
+  default_ttl = 86400
+  max_ttl     = 31536000
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+  }
+}
+
+# # Origin Request Policy to forward signed cookies to CloudFront for validation
+# resource "aws_cloudfront_origin_request_policy" "signed_cookie_origin_policy" {
+#   name    = "signed-cookie-origin-policy"
+#   comment = "Forward signed cookies for CloudFront validation"
+
+#   cookies_config {
+#     cookie_behavior = "whitelist"
+#     cookies {
+#       items = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
+#     }
+#   }
+
+#   headers_config {
+#     header_behavior = "whitelist"
+#     headers {
+#       items = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+#     }
+#   }
+
+#   query_strings_config {
+#     query_string_behavior = "none"
+#   }
+# }
+
 # CloudFront Distribution for HLS Streaming
 resource "aws_cloudfront_distribution" "hls_distribution" {
   origin {
@@ -362,29 +463,16 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
-    forwarded_values {
-      query_string = false
-      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
-
-      cookies {
-        # CloudFront must forward the specific signed cookies to itself for validation
-        forward = "whitelist"
-        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
-      }
-      
-    }
+    # Use cache policy instead of forwarded_values
+    cache_policy_id            = aws_cloudfront_cache_policy.signed_cookie_policy.id
+    # origin_request_policy_id   = aws_cloudfront_origin_request_policy.signed_cookie_origin_policy.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
     compress               = true
 
-    # Enable signed URLs if key group is created
+    # Enable signed cookies via key group
     trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
-
-    # Attach CORS response headers policy
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
     
     // TODO: attach domain and SSL certificate for custom domain support
   }
@@ -396,28 +484,16 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
-    forwarded_values {
-      query_string = false
-      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
-
-      cookies {
-        # CloudFront must forward the specific signed cookies to itself for validation
-        forward = "whitelist"
-        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
-      }
-    }
-
-    min_ttl                = 0
-    default_ttl            = 5
-    max_ttl                = 60
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Enable signed URLs if key group is created
-    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
-
-    # Attach CORS response headers policy
+    # Use cache policy for m3u8 files
+    cache_policy_id            = aws_cloudfront_cache_policy.m3u8_cache_policy.id
+    # origin_request_policy_id   = aws_cloudfront_origin_request_policy.signed_cookie_origin_policy.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    # Enable signed cookies via key group
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
   }
 
   # Cache behavior for .ts segments (longer TTL as they don't change)
@@ -427,28 +503,16 @@ resource "aws_cloudfront_distribution" "hls_distribution" {
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = "S3-${aws_s3_bucket.processed_bucket.id}"
 
-    forwarded_values {
-      query_string = false
-      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
-
-      cookies {
-        # CloudFront must forward the specific signed cookies to itself for validation
-        forward = "whitelist"
-        whitelisted_names = ["CloudFront-Key-Pair-Id", "CloudFront-Policy", "CloudFront-Signature"]
-      }
-    }
-
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Enable signed URLs if key group is created
-    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
-
-    # Attach CORS response headers policy
+    # Use cache policy for ts segments
+    cache_policy_id            = aws_cloudfront_cache_policy.ts_cache_policy.id
+    # origin_request_policy_id   = aws_cloudfront_origin_request_policy.signed_cookie_origin_policy.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    # Enable signed cookies via key group
+    trusted_key_groups = [aws_cloudfront_key_group.hls_key_group[0].id]
   }
 
   price_class = var.cloudfront_price_class
