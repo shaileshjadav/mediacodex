@@ -131,18 +131,24 @@ async function getVideoPresignedUrl(
   if(!CLOUDFRONT_PRIVATE_KEY_PATH || !CLOUDFRONT_KEY_PAIR_ID){
     throw new Error("config error");
   }
-  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
-  const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
+  
+  // Use wildcard path to allow access to all files in the video directory
+  // This covers both .m3u8 playlist and .ts segment files
+  const resourcePath = `${CLOUDFRONT_DOMAIN_NAME}/${videoId}/${resolution}/*`;
+  const playlistUrl = `${CLOUDFRONT_DOMAIN_NAME}/${videoId}/${resolution}/playlist.m3u8`;
+  
   const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
-  // const privateKey = CLOUDFRONT_PRIVATE_KEY;
+  
+  // Generate signed cookies with wildcard resource path
   const cookies = getSignedCookies({
-      url,
+      url: resourcePath,  // Wildcard path for all files in this resolution
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
       dateLessThan: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       privateKey,
   });
   
-  return { url , cookies};
+  // Return the playlist URL but cookies will work for all files
+  return { url: playlistUrl, cookies };
 }
 
 export const getVideoList = async (): Promise<Video[]> => {
