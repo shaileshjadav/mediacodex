@@ -137,6 +137,12 @@ async function getVideoPresignedUrl(
   const resourcePath = `${CLOUDFRONT_DOMAIN_NAME}/${videoId}/${resolution}/`; // Note: A trailing slash is often implied for a directory, but the * makes it explicit
   const expiresIn = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+  const nowEpoch = Math.floor(Date.now() / 1000);
+  const expiryEpoch = nowEpoch + 10 * 60;
+
+  console.log("Server now (UTC):", new Date(nowEpoch * 1000).toISOString());
+  console.log("Expiry (UTC):", new Date(expiryEpoch * 1000).toISOString());
+
   // A more precise custom policy with a wildcard resource:
   const customPolicy = JSON.stringify({
     Statement: [
