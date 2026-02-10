@@ -58,10 +58,10 @@ export const getPresignedUrl = async (
   };
 
   res
-  // .cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOptions)
+  .cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOptions)
   .cookie("CloudFront-Signature", cookies["CloudFront-Signature"], cookieOptions)
   .cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], cookieOptions)
-  .cookie("CloudFront-Expires", cookies["CloudFront-Expires"], cookieOptions)
+  // .cookie("CloudFront-Expires", cookies["CloudFront-Expires"], cookieOptions)
   .status(200)
   .json({ url });
 };
