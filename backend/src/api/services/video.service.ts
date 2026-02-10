@@ -134,15 +134,31 @@ async function getVideoPresignedUrl(
   
   // The base path for which you want to grant access to all subdirectories and files
   // Use a wildcard (*) to cover all contents of the directory.
-  const s3ObjectKey = `${videoId}/${resolution}/*`;
+  const resourcePath = `${CLOUDFRONT_DOMAIN_NAME}/${videoId}/${resolution}/`; // Note: A trailing slash is often implied for a directory, but the * makes it explicit
+  const expiresIn = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // A more precise custom policy with a wildcard resource:
+  const customPolicy = JSON.stringify({
+    Statement: [
+      {
+        Resource: `${resourcePath}*`, // Grants access to all files in the directory
+        Condition: {
+          DateLessThan: { "AWS:EpochTime": Math.floor(expiresIn.getTime() / 1000) }, // Valid for 10 Minutes
+          // Optional: You can also add DateGreaterThan and IpAddress conditions here
+        },
+      },
+    ],
+  });
+
+  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
   const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
   const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
   // const privateKey = CLOUDFRONT_PRIVATE_KEY;
   const cookies = getSignedCookies({
-      url,
+      url:resourcePath,
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
-      dateLessThan: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       privateKey,
+      policy: customPolicy
   });
   
   return { url , cookies};
