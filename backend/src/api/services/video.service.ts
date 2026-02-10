@@ -156,18 +156,17 @@ async function getVideoPresignedUrl(
       {
         Resource: `${resourcePath}*`, // Grants access to all files in the directory
         Condition: {
-          DateLessThan: { "AWS:EpochTime": new Date(dateLessThan).getTime() / 1000 }, // Valid for 10 Minutes
+          DateLessThan: { "AWS:EpochTime": new Date(Date.now() + 10 * 60 * 1000) }, // Valid for 10 Minutes
           // Optional: You can also add DateGreaterThan and IpAddress conditions here
         },
       },
     ],
   });
-  
-  // const privateKey = CLOUDFRONT_PRIVATE_KEY;
-  const cookies = getSignedCookies({
+    // const privateKey = CLOUDFRONT_PRIVATE_KEY;
+    const cookies = getSignedCookies({
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
       privateKey,
-      policy: customPolicy
+      policy: customPolicy,
   });
   
   return { url , cookies};
