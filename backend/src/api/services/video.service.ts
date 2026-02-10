@@ -148,6 +148,7 @@ async function getVideoPresignedUrl(
   const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
   const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
 
+  const unixTime = Math.floor(expiresIn.getTime() / 1000);
   
   // A more precise custom policy with a wildcard resource:
   const customPolicy = {
@@ -155,7 +156,7 @@ async function getVideoPresignedUrl(
       {
         Resource: `${resourcePath}*`, 
         Condition: {
-          DateLessThan: { "AWS:EpochTime": new Date(Date.now() + 10 * 60 * 1000) },
+          DateLessThan: { "AWS:EpochTime": unixTime },
         },
       },
     ],
