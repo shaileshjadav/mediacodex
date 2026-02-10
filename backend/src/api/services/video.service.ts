@@ -143,22 +143,26 @@ async function getVideoPresignedUrl(
   console.log("Server now (UTC):", new Date(nowEpoch * 1000).toISOString());
   console.log("Expiry (UTC):", new Date(expiryEpoch * 1000).toISOString());
 
+
+  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
+  const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
+  const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
+  const dateLessThan = "2027-01-01";
+
+  
   // A more precise custom policy with a wildcard resource:
   const customPolicy = JSON.stringify({
     Statement: [
       {
         Resource: `${resourcePath}*`, // Grants access to all files in the directory
         Condition: {
-          DateLessThan: { "AWS:EpochTime": Math.floor(expiresIn.getTime() / 1000) }, // Valid for 10 Minutes
+          DateLessThan: { "AWS:EpochTime": new Date(dateLessThan).getTime() / 1000 }, // Valid for 10 Minutes
           // Optional: You can also add DateGreaterThan and IpAddress conditions here
         },
       },
     ],
   });
-
-  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
-  const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
-  const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
+  
   // const privateKey = CLOUDFRONT_PRIVATE_KEY;
   const cookies = getSignedCookies({
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
