@@ -131,7 +131,10 @@ async function getVideoPresignedUrl(
   if(!CLOUDFRONT_PRIVATE_KEY_PATH || !CLOUDFRONT_KEY_PAIR_ID){
     throw new Error("config error");
   }
-  const s3ObjectKey = `${videoId}/${resolution}/playlist.m3u8`;
+  
+  // The base path for which you want to grant access to all subdirectories and files
+  // Use a wildcard (*) to cover all contents of the directory.
+  const s3ObjectKey = `${videoId}/${resolution}/*`;
   const url = `${CLOUDFRONT_DOMAIN_NAME}/${s3ObjectKey}`;
   const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
   // const privateKey = CLOUDFRONT_PRIVATE_KEY;
