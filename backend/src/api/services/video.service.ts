@@ -161,7 +161,6 @@ async function getVideoPresignedUrl(
   const privateKey = fs.readFileSync(CLOUDFRONT_PRIVATE_KEY_PATH, 'utf-8');
   // const privateKey = CLOUDFRONT_PRIVATE_KEY;
   const cookies = getSignedCookies({
-      url:resourcePath,
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
       privateKey,
       policy: customPolicy
