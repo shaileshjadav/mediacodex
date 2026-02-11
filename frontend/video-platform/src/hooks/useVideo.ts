@@ -1,10 +1,6 @@
-import { useContext } from "react";
-import { VideoContext } from "../contexts/VideoContext";
+import { useVideoStore } from "../contexts/VideoContext";
 
 export const useVideos = () => {
-  const ctx = useContext(VideoContext);
-  if (!ctx) {
-    throw new Error("useVideos must be used inside VideoProvider");
-  }
-  return ctx;
+  // Thin wrapper so existing callers don't change.
+  return useVideoStore();
 };

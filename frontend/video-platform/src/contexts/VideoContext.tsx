@@ -1,101 +1,103 @@
-import React, { createContext, useCallback, useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { create } from "zustand";
 import { getVideoList } from "../apis/video";
 import type { Video } from "../types";
 import { VIDEO_STATUS } from "../utils/constants";
 
-type VideoContextType = {
+type VideoStoreState = {
   videos: Video[];
   loading: boolean;
   isInitialLoading: boolean;
   error: string | null;
   refresh: () => void;
   addVideo: (videoId: string) => void;
-
-    selectedVideo: Video | null;
+  selectedVideo: Video | null;
   selectVideo: (video: Video) => void;
   clearSelectedVideo: () => void;
+  loadVideos: (isRefresh?: boolean) => Promise<void>;
 };
 
-export const VideoContext = createContext<VideoContextType | null>(null);
+export const useVideoStore = create<VideoStoreState>((set, get) => ({
+  videos: [],
+  loading: false,
+  isInitialLoading: true,
+  error: null,
 
-export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<Video|null>(null);
-
-  const loadVideos = useCallback(async (isRefresh = false) => {
+  loadVideos: async (isRefresh = false) => {
+    const { isInitialLoading } = get();
     try {
       // Only show loading spinner on initial load, not on refresh
       if (!isRefresh) {
-        setLoading(true);
+        set({ loading: true });
       }
-      
+
       const data = await getVideoList();
-      setVideos(data);
-      setError(null);
-      
+      set({
+        videos: data,
+        error: null,
+      });
+
       // Mark initial loading as complete
       if (isInitialLoading) {
-        setIsInitialLoading(false);
+        set({ isInitialLoading: false });
       }
     } catch (e: any) {
-      setError(e.message || "Failed to fetch videos");
+      set({
+        error: e?.message || "Failed to fetch videos",
+      });
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, [isInitialLoading]);
+  },
 
-  const refreshVideos = () => {
-    loadVideos(true); // Pass true to indicate this is a refresh
-  };
+  refresh: () => {
+    // Pass true to indicate this is a refresh (no loading spinner)
+    get().loadVideos(true);
+  },
 
-  const addVideo = useCallback((videoId : string)=>{
-    const newVideos = [...videos];
-    const tempVideo: Video = {
-      id: newVideos.length.toString(),
-      title:'',
-      description: '',
-      videoId: videoId,
-      status: VIDEO_STATUS.PROCESSING,
-      uploadedAt: new Date(),
-      processedUrls: {},
-      originalUrl: '',
-      filename: '',
-      fileSize: 0,
-    }
-    newVideos.push(tempVideo);
-    setVideos(newVideos);
-  },[videos]);
+  addVideo: (videoId: string) => {
+    set((state) => {
+      const newVideos = [...state.videos];
+      const tempVideo: Video = {
+        id: newVideos.length.toString(),
+        title: "",
+        description: "",
+        videoId,
+        status: VIDEO_STATUS.PROCESSING,
+        uploadedAt: new Date(),
+        processedUrls: {},
+        originalUrl: "",
+        filename: "",
+        fileSize: 0,
+      };
+      newVideos.push(tempVideo);
+      return { videos: newVideos };
+    });
+  },
+
+  selectedVideo: null,
+  selectVideo: (video: Video) => set({ selectedVideo: video }),
+  clearSelectedVideo: () => set({ selectedVideo: null }),
+}));
+
+// Keep the existing VideoProvider API so App.tsx and other
+// components do not need to change. It now simply initializes
+// the zustand store and sets up polling.
+export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const loadVideos = useVideoStore((state) => state.loadVideos);
 
   useEffect(() => {
     loadVideos();
 
     const interval = setInterval(() => {
       // TODO: poll only if processing videos exist
-      // if (videos.some(v => v.status === VIDEO_STATUS.PROCESSING)) {
-        loadVideos(true);
-      // }
-    }, 30000);
+      loadVideos(true);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [loadVideos]);
-  return (
-    <VideoContext.Provider
-      value={{
-        videos,
-        loading,
-        isInitialLoading,
-        error,
-        refresh: refreshVideos,
-        addVideo,
-        selectedVideo,
-        selectVideo: setSelectedVideo,
-        clearSelectedVideo: () => setSelectedVideo(null),
-      }}
-    >
-      {children}
-    </VideoContext.Provider>
-  );
+
+  return <>{children}</>;
 };
