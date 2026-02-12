@@ -74,10 +74,9 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
       qualityOptions.length > 0 &&
       !qualityOptions.find((q) => q.value === selectedQuality)
     ) {
-      console.log('qualityOptions[0].value', qualityOptions[0].value);
       setSelectedQuality(qualityOptions[0].value);
     }
-  }, [video, qualityOptions, selectedQuality]);
+  }, [video]);
 
   const handleQualityChange = (quality: string) => {
     setSelectedQuality(quality);

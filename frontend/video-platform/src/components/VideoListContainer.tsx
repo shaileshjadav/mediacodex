@@ -1,19 +1,46 @@
-import React, {  } from 'react';
+import React, { useEffect } from 'react';
 import VideoList from './VideoList';
-import { useVideos } from '../hooks/useVideo';
+import { useVideoStore } from '../hooks/useVideoList';
+import { useShallow } from 'zustand/shallow';
+import { VIDEO_STATUS } from '../utils/constants';
+import { useVideoPlayerStore } from '../hooks/useVideoPlayer';
 
-interface VideoListContainerProps {
-  onVideoSelect: (videoId: string) => void;
-  onEmbedClick: (videoId: string) => void;
-}
 
-const VideoListContainer: React.FC<VideoListContainerProps> = ({
-  onVideoSelect,
-  onEmbedClick,
-}) => {
- const { videos, isInitialLoading, error, refresh } = useVideos();
+const VideoListContainer: React.FC = () => {
+  const selectVideo = useVideoPlayerStore((state) => state.selectVideo);
+  const setEmbedVideo = useVideoStore((state) => state.setEmbedVideo);
+
+  const handleVideoSelect = (videoId: string) => {
+    const video = videos.find((v) => v.id === videoId);
+    if (video && video.status === VIDEO_STATUS.COMPLETED) {
+      selectVideo(video);
+    }
+  };
+
+  const handleEmbedClick = (videoId: string) => {
+    const video = videos.find((v) => v.id === videoId);
+    if (video) {
+      setEmbedVideo(video);
+    }
+  };
+
+  //useShallow make sure that component re-renders only when actual state changed.
+ const { videos, isInitialLoading, error } = useVideoStore(useShallow((state) => ({
+    videos: state.videos,
+    isInitialLoading: state.isInitialLoading,
+    error: state.error,
+ })));
+ const refresh = useVideoStore(state => state.refresh);
   
-
+ useEffect(() => {
+  // intial fetch
+  refresh();
+  const interval = setInterval(() => {
+    refresh();
+  },10000)
+  return () => clearInterval(interval);
+ }, [refresh])
+ 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-96 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
@@ -43,8 +70,8 @@ const VideoListContainer: React.FC<VideoListContainerProps> = ({
     <VideoList
       videos={videos}
       loading={isInitialLoading}
-      onVideoSelect={onVideoSelect}
-      onEmbedClick={onEmbedClick}
+      onVideoSelect={handleVideoSelect}
+      onEmbedClick={handleEmbedClick}
     />
   );
 };
