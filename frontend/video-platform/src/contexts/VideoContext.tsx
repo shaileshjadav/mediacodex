@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { create } from "zustand";
 import { getVideoList } from "../apis/video";
 import type { Video } from "../types";
@@ -11,10 +10,10 @@ type VideoStoreState = {
   error: string | null;
   refresh: () => void;
   addVideo: (videoId: string) => void;
-  selectedVideo: Video | null;
-  selectVideo: (video: Video) => void;
-  clearSelectedVideo: () => void;
   loadVideos: (isRefresh?: boolean) => Promise<void>;
+  isEmbedModalOpen: boolean;
+  setIsEmbedModalOpen: () => void,
+  setIsEmbedModalClose: () => void,
 };
 
 export const useVideoStore = create<VideoStoreState>((set, get) => ({
@@ -22,6 +21,7 @@ export const useVideoStore = create<VideoStoreState>((set, get) => ({
   loading: false,
   isInitialLoading: true,
   error: null,
+  isEmbedModalOpen: false,
 
   loadVideos: async (isRefresh = false) => {
     const { isInitialLoading } = get();
@@ -74,30 +74,6 @@ export const useVideoStore = create<VideoStoreState>((set, get) => ({
       return { videos: newVideos };
     });
   },
-
-  selectedVideo: null,
-  selectVideo: (video: Video) => set({ selectedVideo: video }),
-  clearSelectedVideo: () => set({ selectedVideo: null }),
+   setIsEmbedModalOpen: () => set(() => ({ isEmbedModalOpen: true })),
+   setIsEmbedModalClose: () => set(() => ({ isEmbedModalOpen: false })),
 }));
-
-// Keep the existing VideoProvider API so App.tsx and other
-// components do not need to change. It now simply initializes
-// the zustand store and sets up polling.
-export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const loadVideos = useVideoStore((state) => state.loadVideos);
-
-  useEffect(() => {
-    loadVideos();
-
-    const interval = setInterval(() => {
-      // TODO: poll only if processing videos exist
-      loadVideos(true);
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [loadVideos]);
-
-  return <>{children}</>;
-};
