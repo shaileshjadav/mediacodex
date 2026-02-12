@@ -7,25 +7,21 @@ import {
   EmbedModal,
 } from '../components';
 import { useVideoPlayerStore } from '../hooks/useVideoPlayer';
-import { useVideoStore } from '../contexts/VideoContext';
+import { useVideoStore } from '../hooks/useVideoList';
 
 const DashboardPage: React.FC =() => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addVideo = useVideoStore((state) => state.addVideo);
-  const isEmbedModalOpen = useVideoStore((state) => state.isEmbedModalOpen);
-  const setIsEmbedModalClose = useVideoStore((state) => state.setIsEmbedModalClose);
+  const selectedEmbedVideo = useVideoStore((state) => state.selectedEmbedVideo);
+  const setEmbedVideo = useVideoStore((state) => state.setEmbedVideo);
   const selectedVideo = useVideoPlayerStore((state) => state.selectedVideo);
   const selectVideo = useVideoPlayerStore((state) => state.selectVideo);
-  
+
   
   const handleUploadComplete = (videoId: string) => {
     setIsModalOpen(false);
     addVideo(videoId); // Refresh the video list after upload
-  };
-
-  const handleCloseEmbedModal = () => {
-    setIsEmbedModalClose();
   };
 
   return (
@@ -69,9 +65,9 @@ const DashboardPage: React.FC =() => {
       />
 
       <EmbedModal
-        isOpen={isEmbedModalOpen}
-        onClose={handleCloseEmbedModal}
-        video={selectedVideo}
+        isOpen={selectedEmbedVideo?true:false}
+        onClose={() => setEmbedVideo(null)}
+        video={selectedEmbedVideo}
       />
 
       <VideoListContainer/>

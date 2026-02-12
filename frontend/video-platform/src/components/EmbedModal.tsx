@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useCallback} from 'react';
 import {
   XMarkIcon,
   ClipboardIcon,
@@ -23,13 +23,8 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && video) {
-      fetchEmbedCode();
-    }
-  }, [isOpen, video]);
 
-  const fetchEmbedCode = async () => {
+  const fetchEmbedCode = useCallback(async () => {
     if (!video) return;
 
     try {
@@ -43,7 +38,14 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  },[video]);
+
+  
+  useEffect(() => {
+    if (isOpen && video) {
+      fetchEmbedCode();
+    }
+  }, [isOpen, video, fetchEmbedCode]);
 
   const copyToClipboard = async (text: string) => {
     try {

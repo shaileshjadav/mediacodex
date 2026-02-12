@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import VideoList from './VideoList';
-import { useVideoStore } from '../contexts/VideoContext';
+import { useVideoStore } from '../hooks/useVideoList';
 import { useShallow } from 'zustand/shallow';
 import { VIDEO_STATUS } from '../utils/constants';
 import { useVideoPlayerStore } from '../hooks/useVideoPlayer';
@@ -8,20 +8,19 @@ import { useVideoPlayerStore } from '../hooks/useVideoPlayer';
 
 const VideoListContainer: React.FC = () => {
   const selectVideo = useVideoPlayerStore((state) => state.selectVideo);
+  const setEmbedVideo = useVideoStore((state) => state.setEmbedVideo);
 
   const handleVideoSelect = (videoId: string) => {
     const video = videos.find((v) => v.id === videoId);
     if (video && video.status === VIDEO_STATUS.COMPLETED) {
       selectVideo(video);
-      // setIsPlayerModalOpen(true);
     }
   };
 
   const handleEmbedClick = (videoId: string) => {
     const video = videos.find((v) => v.id === videoId);
     if (video) {
-      // selectVideo(video);
-      // setIsEmbedModalOpen(true);
+      setEmbedVideo(video);
     }
   };
 

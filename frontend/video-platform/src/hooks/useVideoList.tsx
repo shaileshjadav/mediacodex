@@ -11,9 +11,8 @@ type VideoStoreState = {
   refresh: () => void;
   addVideo: (videoId: string) => void;
   loadVideos: (isRefresh?: boolean) => Promise<void>;
-  isEmbedModalOpen: boolean;
-  setIsEmbedModalOpen: () => void,
-  setIsEmbedModalClose: () => void,
+  selectedEmbedVideo: Video | null;
+  setEmbedVideo: (video: Video | null) => void;
 };
 
 export const useVideoStore = create<VideoStoreState>((set, get) => ({
@@ -21,7 +20,7 @@ export const useVideoStore = create<VideoStoreState>((set, get) => ({
   loading: false,
   isInitialLoading: true,
   error: null,
-  isEmbedModalOpen: false,
+  selectedEmbedVideo:null,
 
   loadVideos: async (isRefresh = false) => {
     const { isInitialLoading } = get();
@@ -73,7 +72,6 @@ export const useVideoStore = create<VideoStoreState>((set, get) => ({
       newVideos.push(tempVideo);
       return { videos: newVideos };
     });
-  },
-   setIsEmbedModalOpen: () => set(() => ({ isEmbedModalOpen: true })),
-   setIsEmbedModalClose: () => set(() => ({ isEmbedModalOpen: false })),
+  },    
+   setEmbedVideo: (video: Video | null) => set({ selectedEmbedVideo: video }),
 }));
