@@ -51,9 +51,8 @@ export async function init() {
 
   while (true) {
     const { Messages } = await client.send(command);
-    console.log("Messages", Messages);
+    
     if (!Messages) {
-      console.log("no message found");
       continue;
     }
     for (const message of Messages) {
