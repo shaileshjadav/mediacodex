@@ -11,25 +11,22 @@ import router from "./api/routes";
 import errorHandlerMiddleware from "./api/middleware/errorHandler";
 import {clerkMiddleware} from "@clerk/express";
 import {clerkConfig} from "./config/clerk";
-import { CORS_ORIGINS, VIDEO_STATUS_CRON_INTERVAL_MINUTES } from "./config/constants";
+import { VIDEO_STATUS_CRON_INTERVAL_MINUTES } from "./config/constants";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-const allowedOrigins = CORS_ORIGINS?.split(",");
-console.log("Allowed CORS origins:", allowedOrigins);
-if(allowedOrigins) {
   // CORS configuration
-  const corsOptions = {
-    origin:allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    credentials: true
-  };
+const corsOptions = {
+  origin:'*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
+};
 
   // Apply CORS for all environments
-  app.use(cors(corsOptions));
-}
+app.use(cors(corsOptions));
+
 
 // Middleware
 app.use(express.json());

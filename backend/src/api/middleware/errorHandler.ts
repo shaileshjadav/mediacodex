@@ -17,10 +17,7 @@ const errorHandlerMiddleware = (
 
   res.status(statusCode).json({
     success: false,
-    error: {
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    }
+    error: message,
   });
 };
 

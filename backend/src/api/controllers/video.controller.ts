@@ -31,7 +31,7 @@ export const getVideoList = async (
   req: Request<{}, {}, {}>,
   res: Response<Video[]>,
 ): Promise<void> => {
-  const videos = await videoService.getVideoList();
+  const videos = await videoService.getVideoList(req.userId);
   res.status(200).json(videos);
 };
 

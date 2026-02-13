@@ -49,10 +49,6 @@ export async function getProcessedUrlsFromS3(
 ): Promise<ProcessedUrls> {
   const processedUrls: ProcessedUrls = {};
 
-  console.log(
-    `Searching for processed videos in bucket: ${bucket}, prefix: ${prefix}`,
-  );
-
   const command = new ListObjectsV2Command({
     Bucket: bucket,
     Prefix: prefix,
@@ -61,10 +57,6 @@ export async function getProcessedUrlsFromS3(
   try {
     const response = await s3Client.send(command);
 
-    console.log(`S3 ListObjects response:`, {
-      KeyCount: response.KeyCount,
-      Contents: response.Contents?.map((obj) => obj.Key) || [],
-    });
 
     if (!response.Contents || response.Contents.length === 0) {
       console.log(`No objects found in S3 for prefix: ${prefix}`);
@@ -73,16 +65,14 @@ export async function getProcessedUrlsFromS3(
 
     for (const object of response.Contents) {
       const key = object.Key;
-      console.log(`Processing S3 object: ${key}`);
+      
 
       if (!key || !key.endsWith("playlist.m3u8")) {
-        console.log(`Skipping non-playlist file: ${key}`);
         continue;
       }
 
       // videoId/1280x720/playlist.m3u8
       const pathParts = key.split("/");
-      console.log(`Key path parts:`, pathParts);
 
       if (pathParts.length < 3) {
         console.log(`Invalid key structure: ${key}`);
@@ -90,10 +80,8 @@ export async function getProcessedUrlsFromS3(
       }
 
       const [, resolution] = pathParts;
-      console.log(`Found resolution: ${resolution}`);
 
       const label = RESOLUTION_MAP[resolution];
-      console.log(`Resolution mapping: ${resolution} -> ${label}`);
 
       if (!label) {
         console.log(`No label found for resolution: ${resolution}`);
@@ -101,7 +89,6 @@ export async function getProcessedUrlsFromS3(
       }
 
       processedUrls[label] = key;
-      console.log(`Added to processedUrls: ${label} = ${key}`);
     }
 
     return processedUrls;
@@ -173,8 +160,8 @@ async function getVideoPresignedUrl(
   return { url , cookies};
 }
 
-export const getVideoList = async (): Promise<Video[]> => {
-  const videoList = await videoDal.getVideoList();
+export const getVideoList = async (userId:string): Promise<Video[]> => {
+  const videoList = await videoDal.getVideoList(userId);
   if (!AWS_PROCESSED_BUCKET) {
     throw Error("AWS config is not valid");
   }

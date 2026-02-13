@@ -29,15 +29,16 @@ export const insertVideo = async (
   }
 };
 
-export const getVideoList = async (): Promise<Video[]> => {
+export const getVideoList = async (userId:string): Promise<Video[]> => {
   const client = await pool.connect();
   try {
     const query = `
       SELECT id, "userId", "videoId", "status", "createdAt", "updatedAt"
-      FROM "videos";
+      FROM "videos"
+      WHERE "userId" = $1;
     `;
-
-    const result = await client.query(query);
+    const params = [userId]
+    const result = await client.query(query, params);
     return result.rows;
   } catch (error) {
     throw error;
