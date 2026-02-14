@@ -7,7 +7,7 @@ import {
   GetPresigneUrlResponse,
 } from "../../types/video.types";
 import * as videoService from "../services/video.service";
-import { generateEmbedToken } from "../../utils/jwt";
+import { generateToken } from "../../utils/jwt";
 import {  DOMAIN_NAME } from "../../config/constants";
 
 export const getUploadUrl = async (
@@ -65,7 +65,7 @@ export const getPresignedUrl = async (
   .status(200)
   .json({ url });
 };
-export const generateEmbedCode = async (
+export const generateSharingUrl = async (
   req: Request<{ videoId: string }, {}, { domain?: string }>,
   res: Response,
 ): Promise<void> => {
@@ -78,25 +78,22 @@ export const generateEmbedCode = async (
       return;
     }
 
-    // Generate embed token
-    const token = generateEmbedToken({
+    // Generate sharing token
+    const token = generateToken({
       videoId,
       domain,
       userId: req.userId, 
     });
 
-    // Generate embed code
-    const embedUrl = `${process.env.VIDEO_PLAYER_HOST}/embed/${videoId}?token=${token}`;
-    const embedCode = `<iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
+    // Generate sharing code
+    const sharingURL = `${process.env.VIDEO_PLAYER_HOST}/share/${videoId}?token=${token}`;
 
     res.status(200).json({
       token,
-      embedUrl,
-      embedCode,
-      expiresIn: 300,
+      url:sharingURL,
     });
   } catch (error) {
-    console.error("Generate embed code error:", error);
+    console.error("Generate sharing URL error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { verifyEmbedToken } from "../../utils/jwt";
+import { verifyToken } from "../../utils/jwt";
 import { AWS_PROCESSED_BUCKET } from "../../config/constants";
 import {
   getProcessedUrlsFromS3,
@@ -14,7 +14,6 @@ interface PlayerSessionRequest {
 
 interface PlayerSessionResponse {
   processedUrls: ProcessedUrls;
-  expiresIn: number;
 }
 
 export const createPlayerSession = async (
@@ -34,7 +33,7 @@ export const createPlayerSession = async (
     }
 
     // 1. Verify JWT token
-    const payload = verifyEmbedToken(token);
+    const payload = verifyToken(token);
 
     // 2. Validate video access
     if (payload.videoId !== videoId) {
@@ -70,7 +69,6 @@ export const createPlayerSession = async (
     // 5. Return playback session
     res.status(200).json({
       processedUrls,
-      expiresIn: 300, // 5 minutes
     });
   } catch (error) {
     console.error("Player session error:", error);
