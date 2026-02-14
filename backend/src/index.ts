@@ -11,14 +11,16 @@ import router from "./api/routes";
 import errorHandlerMiddleware from "./api/middleware/errorHandler";
 import {clerkMiddleware} from "@clerk/express";
 import {clerkConfig} from "./config/clerk";
-import { VIDEO_STATUS_CRON_INTERVAL_MINUTES } from "./config/constants";
+import { CORS_ORIGINS, VIDEO_STATUS_CRON_INTERVAL_MINUTES } from "./config/constants";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+const allowedOrigins = CORS_ORIGINS?.split(",");
+
   // CORS configuration
 const corsOptions = {
-  origin:'*',
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true
