@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import EmbedPage from './pages/EmbedPage';
+import PlayerPage from './pages/PlayerPage';
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
 function AppContent() {
   return (
     <Routes>
-      <Route path="/embed/:videoId" element={<EmbedPage />} />
+      <Route path="/share/:videoId" element={<PlayerPage />} />
     </Routes>
   );
 }

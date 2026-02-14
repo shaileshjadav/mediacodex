@@ -6,7 +6,7 @@ export { default as VideoListContainer } from './VideoListContainer';
 export { default as VideoCard } from './VideoCard';
 export { UploadModal } from './UploadModal';
 export { VideoPlayerModal } from './VideoPlayerModal';
-export { EmbedModal } from './EmbedModal';
+export { EmbedModal } from './ShareModal';
 export { default as LandingPage } from './LandingPage';
 export { default as DemoVideo } from './DemoVideo';
 export { default as ProtectedRoute } from './ProtectedRoute';

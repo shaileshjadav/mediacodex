@@ -23,17 +23,15 @@ export const getVideoList = async (): Promise<Video[]> => {
   return response.data;
 };
 
-export const generateEmbedCode = async (
+export const generateShareUrl = async (
   videoId: string,
   domain?: string
 ): Promise<{
   token: string;
-  embedUrl: string;
-  embedCode: string;
-  expiresIn: number;
+  url: string;
 }> => {
   const response = await api.post(
-    `${import.meta.env.VITE_API_BASE_URL}/videos/${videoId}/embed`,
+    `${import.meta.env.VITE_API_BASE_URL}/videos/${videoId}/share`,
     {
       domain,
     }

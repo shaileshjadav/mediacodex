@@ -7,7 +7,6 @@ import {
   ProtectedRoute,
   PublicRoute,
 } from './components';
-import EmbedPage from './pages/EmbedPage';
 import DashboardPage from './pages/DashboardPage';
 
 
@@ -28,15 +27,6 @@ function App() {
 function AppContent() {
   return (
     <Routes>
-      {/* Embed route - public, standalone page without layout */}
-      <Route 
-        path="/embed/:videoId" 
-        element={
-          <PublicRoute>
-            <EmbedPage />
-          </PublicRoute>
-        } 
-      />
 
       {/* All other routes with layout */}
       <Route
