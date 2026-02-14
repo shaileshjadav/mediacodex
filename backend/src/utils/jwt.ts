@@ -4,7 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client } from "../config/aws";
 
 const JWT_SECRET: string = process.env.JWT_SECRET || "your-secret-key";
-const JWT_EXPIRES_IN_SECONDS = 300; // 5 minutes
+const JWT_EXPIRES_IN_SECONDS = 24 * 60 * 60; // 24 hours
 
 export interface EmbedTokenPayload {
   videoId: string;
