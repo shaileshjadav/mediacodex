@@ -6,7 +6,7 @@ import {
   ShareIcon,
 } from '@heroicons/react/24/outline';
 import type { Video } from '../types';
-import { generateEmbedCode } from '../apis/video';
+import { generateShareUrl } from '../apis/video';
 
 interface EmbedModalProps {
   isOpen: boolean;
@@ -19,12 +19,10 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
   onClose,
   video,
 }) => {
-  const [embedCode, setEmbedCode] = useState<string>('');
   const [shareUrl, setShareUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const [copiedEmbed, setCopiedEmbed] = useState(false);
 
 
   const fetchEmbedCode = useCallback(async () => {
@@ -33,14 +31,11 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await generateEmbedCode(video.videoId);
-      setEmbedCode(response.embedCode);
+      const response = await generateShareUrl(video.videoId);
       
-      // Extract URL from embed code (iframe src)
-      const urlMatch = response.embedCode.match(/src="([^"]+)"/);
-      if (urlMatch && urlMatch[1]) {
-        setShareUrl(urlMatch[1]);
-      }
+      
+      setShareUrl(response.url);
+      
     } catch (err: any) {
       console.error('Failed to generate embed code:', err);
       setError(err.response?.data?.error || 'Failed to generate embed code');
@@ -56,16 +51,13 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
     }
   }, [isOpen, video, fetchEmbedCode]);
 
-  const copyToClipboard = async (text: string, type: 'url' | 'embed') => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      if (type === 'url') {
-        setCopiedUrl(true);
-        setTimeout(() => setCopiedUrl(false), 2000);
-      } else {
-        setCopiedEmbed(true);
-        setTimeout(() => setCopiedEmbed(false), 2000);
-      }
+      
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+      
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -136,7 +128,7 @@ export const EmbedModal: React.FC<EmbedModalProps> = ({
                       Share Link
                     </h4>
                     <button
-                      onClick={() => copyToClipboard(shareUrl, 'url')}
+                      onClick={() => copyToClipboard(shareUrl)}
                       className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       {copiedUrl ? (

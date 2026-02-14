@@ -4,7 +4,7 @@ import { createPlayerSession } from '../apis/video';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { usePresignedVideoUrl } from '../hooks/usePresignedVideoUrl';
 
-const EmbedPage: React.FC = () => {
+const PlayerPage: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -57,7 +57,6 @@ const EmbedPage: React.FC = () => {
       qualityOptions.length > 0 &&
       !qualityOptions.find((q) => q.value === selectedQuality)
     ) {
-      console.log('qualityOptions[0].value', qualityOptions[0].value);
       setSelectedQuality(qualityOptions[0].value);
     }
   }, [qualityOptions, selectedQuality]);
@@ -160,4 +159,4 @@ const EmbedPage: React.FC = () => {
   );
 };
 
-export default EmbedPage;
+export default PlayerPage;
