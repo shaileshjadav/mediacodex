@@ -184,6 +184,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        crossOrigin='use-credentials'
         onError={(e) => {
           console.error('Video playback error:', e);
           if (onError) {
