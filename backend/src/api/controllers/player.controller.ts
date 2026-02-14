@@ -34,12 +34,7 @@ export const createPlayerSession = async (
     }
 
     // 1. Verify JWT token
-    console.log("Verifying JWT token...");
     const payload = verifyEmbedToken(token);
-    console.log("Token verified successfully:", {
-      videoId: payload.videoId,
-      domain: payload.domain,
-    });
 
     // 2. Validate video access
     if (payload.videoId !== videoId) {
@@ -55,9 +50,6 @@ export const createPlayerSession = async (
     // 3. Optional domain validation
     const origin = req.headers.origin;
     if (payload.domain && origin && payload.domain !== origin) {
-      console.log(
-        `Domain validation failed: expected=${payload.domain}, actual=${origin}`,
-      );
       res.status(403).json({
         error: "Domain not authorized",
       } as any);
@@ -65,7 +57,6 @@ export const createPlayerSession = async (
     }
 
     // 4. Generate signed HLS URL
-    console.log(`Generating signed HLS URL for video: ${videoId}`);
     if (!AWS_PROCESSED_BUCKET) {
       throw Error("AWS config is not valid");
     }
@@ -75,7 +66,6 @@ export const createPlayerSession = async (
       AWS_PROCESSED_BUCKET,
       videoDetails.videoId,
     );
-    console.log("processed Url", processedUrls);
 
     // 5. Return playback session
     res.status(200).json({

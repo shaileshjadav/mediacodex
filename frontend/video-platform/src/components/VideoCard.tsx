@@ -180,22 +180,31 @@ const VideoCard: React.FC<VideoCardProps> = ({
             className={`w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium py-3 px-4 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${video.status !== VIDEO_STATUS.COMPLETED ? 'disabled:cursor-not-allowed disabled:opacity-50' : ''}`}
             disabled={video.status !== VIDEO_STATUS.COMPLETED}
           >
-            <span className="flex items-center justify-center">
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                />
-              </svg>
-              Generate Embed Code
-            </span>
+           <span className="flex items-center justify-center">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M22 2L11 13"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M22 2L15 22L11 13L2 9L22 2Z"
+              />
+            </svg>
+            Share
+          </span>
+
+
+
           </button>
         </div>
       </div>
