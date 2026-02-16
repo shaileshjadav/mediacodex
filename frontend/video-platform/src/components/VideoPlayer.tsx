@@ -46,16 +46,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     if (!src || !videoRef.current) return;
 
-    // Cleanup previous HLS instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
+    const video = videoRef.current;
 
     if (Hls.isSupported()) {
       // If HLS.js is supported, initialize it
       const hls = new Hls({
-        debug: true,
+        debug: false,
         xhrSetup: (xhr) => {
           xhr.withCredentials = true;
         }
@@ -63,7 +59,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       hlsRef.current = hls;
 
       hls.loadSource(src);
-      hls.attachMedia(videoRef.current);
+      hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log('Manifest parsed, video ready to play');
@@ -93,12 +89,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }
         }
       });
-    } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Fallback for native HLS support (e.g., in Safari)
-      videoRef.current.src = src;
+      video.src = src;
     } else {
       // Fallback for regular video files
-      videoRef.current.src = src;
+      video.src = src;
     }
 
     // Cleanup function
@@ -106,6 +102,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
+      }
+      if (video) {
+        video.pause();
+        video.src = '';
+        video.load();
       }
     };
   }, [src, onError]);
@@ -115,7 +116,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Playback started successfully
+            })
+            .catch((error) => {
+              console.log('Playback interrupted or blocked:', error);
+            });
+        }
       }
     }
   };
@@ -163,7 +173,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (videoRef.current) {
         videoRef.current.currentTime = currentTimeBeforeChange;
         if (wasPlaying) {
-          videoRef.current.play();
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                // Playback resumed successfully
+              })
+              .catch((error) => {
+                console.log('Playback interrupted after quality change:', error);
+              });
+          }
         }
       }
     }, 100);
