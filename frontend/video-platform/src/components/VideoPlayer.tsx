@@ -66,6 +66,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       });
 
       hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
+        // Ignore non-fatal buffer seek over hole errors (common with HLS)
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && 
+            data.details === 'bufferSeekOverHole' && 
+            !data.fatal) {
+          return; // HLS.js handles this automatically
+        }
+
         console.error('HLS error:', data);
         if (onError) {
           onError('HLS playback error occurred');
