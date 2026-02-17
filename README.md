@@ -18,6 +18,14 @@ Mediacodex is a distributed video transcoding system that delivers HLS streaming
 
 ---
 
+## Demo
+
+
+
+
+https://github.com/user-attachments/assets/0436c029-7a8c-46b1-aa1b-8c3a922796b3
+
+
 ## Key Highlights
 
 - **Encoding**: Videos are transcoded into multiple formats (360p, 720p, 1080p) using FFmpeg in separate, isolated environments powered by AWS Fargate containers.
