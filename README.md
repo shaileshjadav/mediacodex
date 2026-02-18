@@ -59,6 +59,12 @@ https://github.com/user-attachments/assets/0436c029-7a8c-46b1-aa1b-8c3a922796b3
 
 ## Architecture
 
+<img width="1694" height="641" alt="mediacodex-architecture" src="https://github.com/user-attachments/assets/9d8021dc-ebd6-492b-8eb1-7f6707e7b254" />
+
+
+
+### Architecture Flow
+
 ```
 Client Uploads Video
         ↓
@@ -84,8 +90,6 @@ Video Player (with signed cookies)
         ↓
 End User Streaming
 ```
-
-### Architecture Flow
 
 1. **Upload**: User uploads video through the web interface
 2. **Storage**: Video is stored in S3 raw-videos bucket
